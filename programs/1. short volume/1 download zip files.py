@@ -26,13 +26,13 @@ def GetHTMLSoup(url):
 	return soup
 
 if __name__=="__main__":
-	soup=GetHTMLSoup("http://www.finra.org/industry/trf/trf-regulation-sho-2015")
+	soup=GetHTMLSoup("http://www.finra.org/industry/trf/trf-regulation-sho-2009")
 	a=[]
 	for li in soup.find(class_='field-item even field field--name-body field--type-text-with-summary field--label-hidden').findAll('ul',recursive=False):
 		a.extend(li.findAll('a'))
 	b=[li['href'] for li in a]
-	# print('\n'.join(b))
-	# exit(0)
+	print('\n'.join(b))
+	exit(0)
 	import os
 	names=[os.path.join("C:/Users/yu_heng/Downloads/",li.split('/')[-1]) for li in b]
 	pairs=zip(b,names)
