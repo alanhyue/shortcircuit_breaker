@@ -43,19 +43,19 @@ proc download data=seldata out=local.from_server;
 run;
 endrsubmit;
 
-* filter unique PERMNO->Ticker matches;
-proc sort data=my.from_server out=a nodupkey;
-by permno htick;
-run;
-PROC PRINT DATA=a(OBS=10);RUN;
 * check if it's a 1-to-1 match;
-* If it is, there should be 0 obs deleted.;
-proc sort data=a out=b nodupkey;
-by permno;
-run;
+* filter unique PERMNO->Ticker matches;
+/*proc sort data=my.from_server out=a nodupkey;*/
+/*by permno htick;*/
+/*run;*/
+/*PROC PRINT DATA=a(OBS=10);RUN;*/
+/** If it is, there should be 0 obs deleted.;*/
+/*proc sort data=a out=b nodupkey;*/
+/*by permno;*/
+/*run;*/
 * save to local drive;
 data my.permno_to_ticker;
-set b;
+set local.from_server;
 run;
 
 proc print data=local.permno_to_ticker (obs=30);

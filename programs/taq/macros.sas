@@ -96,11 +96,10 @@ Parameters:
 file=, the path to the TBIN file.
 out=, the table you want to store the result in.
 ;
-%MACRO ReadTBIN(file=,out=,beg=,end=);
+%MACRO ReadTBIN(file=,out=);
 * read TyyymmX.BIN;
 data &out;
-infile &file truncover LRECL=19 recfm=f
-firstobs=&beg obs=&end;
+infile &file truncover LRECL=19 recfm=f;
 input
 ttim pibr4.
 price pibr4.4
@@ -113,6 +112,11 @@ ex $1.
 run;
 %MEND ReadTBIN;
 
+%MACRO GetPrice(out=,beg=,end=);
+data &out;
+set _tbin(firstobs=&beg obs=&end);
+run;
+%MEND GetPrice;
 
 * Macro: GetVolatility
 Author:Heng Yue
@@ -154,7 +158,8 @@ run;
 %put begin record is &beg;
 %put end   record is &end;
 * Step5.1. Read trade-by-trade data from TBIN;
-%ReadTBIN(file=&bin_path,out=_bin,beg=&beg,end=&end);
+/*%ReadTBIN(file=&bin_path,out=_bin,beg=&beg,end=&end);*/
+%GetPrice(out=_bin,beg=&beg,end=&end);
 * calculate returns from price;
 data _returns;
 set _bin;
@@ -188,7 +193,7 @@ run;
 
 /* Macro LoopDates
 Author:Heng Yue
-Update: 20161201 22:18:38
+Update: 20161202 16:26:15
 Description:
 Calculate the trade-to-trade volatility for different date.
 
@@ -218,6 +223,7 @@ proc sql noprint;
 select count(*) into:total_dates
 from &path_table
 ;quit;
+%put LOG: there are &total_dates dates;
 * Loop through all symbols;
 %do i=1 %to &total_dates; *beginning of the loop;
 %put Loop dates, &i/&total_dates;
@@ -229,14 +235,19 @@ set &path_table;
  call symput ('path_TBIN',path_TBIN);
 end;
 run;
+* Redirect the log;
+%let logname=log&date;
+proc printto log="C:\Users\yu_heng\Downloads\&logname .txt";
+run;
 * write info to log;
+%put *********************************************************;
 %put the date is &date;
 %put path of TIDX file: &path_tidx;
 %put path of TBIN file: &path_tbin;
+%put *********************************************************;
 * Step4.1. Read TIDX;
-/*%let path_tidx="c:\Users\yu_heng\Downloads\T201102Q.IDX";*/
-/*%let path_tbin="c:\Users\yu_heng\Downloads\T201102Q.BIN";*/
 %ReadTIDX(file="&path_tidx",out=_idx);
+%ReadTBIN(file="&path_tbin",out=_tbin);
 * Step4.2. Merge it with symbol list for this date;
 * remove duplicated dates;
 proc sort data=&query(keep=symbol) out=symbol_list nodupkey;
@@ -252,8 +263,15 @@ on a.symbol=b.symbol
 ;quit;
 * get the volatility;
 %GetVolatility(idx_table=with_beg_end,bin_path="&path_tbin",dout=_a);
-* append to the result table;
-proc append base=_result data=_a;run;
+* save the result for this date;
+%let fname=taqdump&date;
+data my.&fname;
+set _a;
+run;
+/** append to the result table;*/
+/*proc append base=_result data=_a;run;*/
+* reset the log destination;
+proc printto;run;
 %end; * end of the loop;
 * copy the result table to the output table;
 data &dout;
