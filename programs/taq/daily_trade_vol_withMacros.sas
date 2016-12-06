@@ -20,7 +20,7 @@ run;
 data query;
 set query;
 /*if _n_<1000;*/
-if "01May2009"d<=date<="31Dec2011"d;
+if "17Jun2008"d<=date<="31Dec2011"d;
 run;
 PROC PRINT DATA=query(OBS=100);RUN;
 
