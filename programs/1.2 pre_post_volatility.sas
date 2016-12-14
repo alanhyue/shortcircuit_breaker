@@ -1,5 +1,5 @@
 * Calculate Pre- and post-event period volatility;
-* Note: SSCB became effective on May 10, 2010;
+* Note: the compliance date of SSCB is 10 Nov 2010;
 
 * seperate the daily price file into pre and post periods;
 data a;

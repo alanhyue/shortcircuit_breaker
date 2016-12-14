@@ -1,14 +1,17 @@
 * calculate the standard volatilty from daily price for a security;
-/*data test;*/
-/*set my.permnodata;*/
-/*if permno<10338;*/
-/*run;*/
 
-proc means data=my.permnodata std noprint;
+* calculate volatility for each firm;
+proc means data=my.permnodata var noprint;
 by permno;
 var ret;
-output out=want (keep=permno stddev)  std=stddev;
+output out=want var=variance;
 run;
+
+* cross-sectional average of the firms volatility;
+* TODO;
+
+PROC PRINT DATA=want (OBS=10);RUN;
+
 
 data with_vol;
 set want;

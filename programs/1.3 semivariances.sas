@@ -6,8 +6,6 @@ The approach refers to the Diether et al. (2009) "It's SHO time" paper. P31.
 data a;
 set my.Permnodata;
 ret=log(prc/lag(prc));
-if date<="10Nov2010"d then dsscb=0;
-else dsscb=1;
 run;
 
 * Step2: separte upwards and downwards variances;
@@ -19,22 +17,37 @@ if ret>0 then down=0;
 else down=ret*ret;
 run;
 
-* Step3: calculate semivariance from reg;
+* Step3: calculate upward semivariance from reg;
 * cross-sectional average of the up- and down-side semivariance;
+%Winsorize(din=semi,dout=winsoup,var=up);
+
 proc sql;
-create table semi_crsec_avg as
-select date, AVG(up) as avgup, AVG(down) as avgdown, dsscb
-from semi
+create table up_crosec as
+select date, AVG(up) as avgup
+from winsoup
 group by date
 ;quit;
-proc sort data=semi_crsec_avg nodup;by date; run;
-PROC PRINT DATA=semi_crsec_avg(OBS=10);RUN;
-%Winsorize(din=semi_crsec_avg,dout=winsoupa,var=avgup);
-proc reg data=winsoupa;
+%AppendSSCBDummy(din=up_crosec,dout=up_withdummy);
+
+PROC PRINT DATA=up_withdummy(OBS=10);RUN;
+
+proc reg data=up_withdummy;
 model avgup=dsscb;
 run;
-%Winsorize(din=semi_crsec_avg,dout=winsodown,var=avgup);
-proc reg data=winsodown;
+* Step3: calculate downward semivariance from reg;
+%Winsorize(din=semi,dout=winsodown,var=down);
+
+proc sql;
+create table down_crosec as
+select date, AVG(down) as avgdown
+from winsodown
+group by date
+;quit;
+%AppendSSCBDummy(din=down_crosec,dout=down_withdummy);
+
+PROC PRINT DATA=down_withdummy(OBS=10);RUN;
+
+proc reg data=down_withdummy;
 model avgdown=dsscb;
 run;
 
