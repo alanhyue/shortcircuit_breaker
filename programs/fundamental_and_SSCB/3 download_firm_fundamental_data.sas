@@ -30,11 +30,17 @@ where '01Jan2011'd<=a.datadate<='07Jan2017'd
 ;quit;
 
 * delete obs with any missing values;
+* delete obs with negative numerator. i.e. CF, earnings, ceq;
+* delete obs with zero shares outstanding or zero share price;
 data want;
  set seldata;
  if cmiss(of _all_) then delete;
  cf=ebitda-capx;
+ if cf<0 then delete;
+ if earnings<0 then delete;
+ if ceq<0 then delete;
  pdt=SHOUT*prc;
+ if pdt<=0 then delete;
  earning_to_prc=earnings/pdt;
  book_to_market=ceq/pdt;
  cf_to_prc=cf/pdt;
