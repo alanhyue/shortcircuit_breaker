@@ -21,7 +21,7 @@ where a.permno=b.permno and '01Jan2007'd<=a.date<='31Dec2013'd
 * Organize the data base.
 1. calculate the return from PRC.
 2. reverse the negative PRC to positive. They are 
-	negative before it is calculated from bid/ask 
+	negative because it is calculated from bid/ask 
 	price.
 ;
 data org;
