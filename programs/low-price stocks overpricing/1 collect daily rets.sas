@@ -10,13 +10,23 @@ rsubmit;
 * Reference to lib crspa:
 https://wrds-web.wharton.upenn.edu/wrds/tools/variable.cfm?library_id=137&file_id=67061;
 
-proc upload data=my.Alive_secus out=secus;run;
+* Prepare unique PERMNO;
+data haspermno;
+set my.haltslink;
+if permno;
+run;
+
+proc sort data=haspermno out=unique nodupkey;
+by permno;
+run;
+
+proc upload data=unique out=secus;run;
 
 proc sql;
 create table seldata as
 select a.PERMNO, a.date, a.prc, a.BIDLO, a.ASKHI, a.ret
 from crspa.dsf as a, secus as b
-where a.permno=b.permno and '01Jan2007'd<=a.date<='31Dec2013'd
+where a.permno=b.permno and '10Nov2010'd<=a.date
 ;quit;
 * Organize the data base.
 1. calculate the return from PRC.

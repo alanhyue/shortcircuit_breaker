@@ -1,6 +1,8 @@
 libname my "C:\Users\yu_heng\Downloads\";
 libname taqref 'E:\SCB\TAQ\data\sasdata';
-
+%MACRO pr;
+ SUBMIT "PROC PRINT DATA=_last_(obs=10);QUIT;";
+%MEND pr;
 %MACRO AppendSSCBDummy(din=,dout=);
 data &dout;
 set &din;
