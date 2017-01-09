@@ -5,11 +5,6 @@ signon username=_prompt_;
 
 libname my 'C:\Users\yu_heng\Downloads\';
 
-rsubmit;
-
-* Reference to lib crspa:
-https://wrds-web.wharton.upenn.edu/wrds/tools/variable.cfm?library_id=137&file_id=67061;
-
 * Prepare unique PERMNO;
 data haspermno;
 set my.haltslink;
@@ -19,6 +14,11 @@ run;
 proc sort data=haspermno out=unique nodupkey;
 by permno;
 run;
+
+* Reference to lib crspa:
+https://wrds-web.wharton.upenn.edu/wrds/tools/variable.cfm?library_id=137&file_id=67061;
+
+rsubmit;
 
 proc upload data=unique out=secus;run;
 

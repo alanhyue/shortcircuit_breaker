@@ -10,14 +10,20 @@ on a.permno=b.permno
 	and intnx('day',b.date,&windowstart) <= a.date <= intnx('day',b.date,&windowend)
 order by a.permno, a.date
 ;quit;
-*weird duplicates show up around the event date, don't know the exact cause but suspect 
-it's from the SQL matching mechanism.;
-proc sort data=mg nodupkey; by permno date;run;
+
+*Remove duplicates. There are duplicated observations because of overlapping windows;
+proc sort data=mg nodup; by permno date;run;
 
 data marksscb;
 set mg;
 dsscb=0;
 if evt then dsscb=1;
 run;
-PROC PRINT DATA=marksscb(obs=1000);RUN;
+
+
+data my.marksscb;
+set marksscb;
+run;
+
+PROC PRINT DATA=marksscb(obs=10);RUN;
 
