@@ -10,6 +10,8 @@ on a.permno=b.permno
 	and intnx('day',b.date,&windowstart) <= a.date <= intnx('day',b.date,&windowend)
 order by a.permno, a.date
 ;quit;
+*weird duplicates show up around the event date, don't know the exact cause but suspect 
+it's from the SQL matching mechanism.;
 proc sort data=mg nodupkey; by permno date;run;
 
 data marksscb;
