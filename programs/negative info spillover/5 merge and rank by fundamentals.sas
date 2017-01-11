@@ -89,13 +89,13 @@ order by permno
 proc sql;
 create table mg_funda_ranked as
 select a.*, b.*
-from ranked as a
+from my.ranked_sector_beta as a
 left join funda_avg as b
 on a.permno=b.permno
 ;quit;
 
 * save to local drive;
-data my.funda_ranked;
+data my.merged_funda_ranked;
 set mg_funda_ranked;
 run;
 

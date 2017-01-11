@@ -14,5 +14,8 @@ var ret;
 ranks rank_sector_beta;
 run;
 
+data my.ranked_sector_beta;
+set ranked;
+run;
 ****;
 PROC PRINT DATA=ranked(OBS=10);RUN;

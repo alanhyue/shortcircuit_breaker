@@ -20,16 +20,6 @@ from crspa.msf as a
 where '01Jan2009'd<=a.date<='31Dec2010'd
 ;quit;
 
-/*a.tic as symbol,*/
-/*a.cusip as cusip,*/
-/*a.datadate as date,*/
-/*a.ceq as ceq, /*Common/Ordinary Equity - Total*/*/
-/*a.OIADP as earnings, /*Operating Income After Depreciation*/*/
-/*a.CSHO as SHOUT, /*Common Shares Outstanding*/*/
-/*a.prcc_f as prc, /*Price Close - Annual - Fiscal*/*/
-/*a.ebitda as ebitda, /*Earnings Before Interest. Cash flow ingredient(1/2)*/*/
-/*a.capx as capx /*Capital Expenditures. Cash flow ingredient (2/2)*/*/
-
 * this will be a permanent dataset on the local pc;
 proc download data=seldata out=local.neginfo_dsf_test; 
 run;

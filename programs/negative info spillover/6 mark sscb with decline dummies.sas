@@ -12,7 +12,7 @@ data halts;
 set my.haltslink;
 if permno;
 run;
-
+***********************************************;
 * Fetch daily return from crsp;
 %let wrds=wrds.wharton.upenn.edu 4016;
 options comamid=TCP remote=WRDS;
@@ -36,7 +36,7 @@ proc sort data=seldata nodup; by evt; run;
 proc download data=seldata out=crspdata; 
 run;
 endrsubmit;
-
+********************************************;
 * keep the next trading day return;
 proc sort data=crspdata out=have;by  permno descending date;run;
 data reversed;

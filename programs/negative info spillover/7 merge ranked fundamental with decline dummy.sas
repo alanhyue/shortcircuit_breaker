@@ -12,15 +12,8 @@ left join nextdecline as b
 on a.permno=b.permno
 ;quit;
 
-* subtotal by rank_sector_beta;
-proc sql;
-create table subtotal as
-select rank_sector_beta, sum(nDecline) as nDecline, sum(total) as total
-from mg
-group by rank_sector_beta
-;quit;
-data subtotal;
-set subtotal;
-pct=nDecline/total;
+* save to local drive;
+data my.mged_beta_funda_decline;
+set mg;
 run;
-PROC PRINT DATA=subtotal(OBS=10);RUN;
+
