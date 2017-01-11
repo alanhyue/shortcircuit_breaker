@@ -1,4 +1,4 @@
-%macro fileread(dout=,flist=);
+%macro fileread(dout=,flist=); 
 proc import datafile=&flist out=_filelist dbms=tab replace;
 getnames=yes;
 run;

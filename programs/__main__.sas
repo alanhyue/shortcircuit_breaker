@@ -1,3 +1,4 @@
+libname static "E:\SCB\data" access=readonly;
 libname my "C:\Users\yu_heng\Downloads\";
 libname taqref 'E:\SCB\TAQ\data\sasdata';
 %MACRO pr;
@@ -154,3 +155,34 @@ from &dout
 %MEND CusipLinkGvkey;
 
 
+
+/* WORKING ...!! */
+/*%MACRO permno_link_all(din=,dout=);*/
+/*%put The input table (din) has to have two columns named ;*/
+/*%put exactly as "permno" and "Date".; */
+/*%put Column permno: the CRSP PERMNO identification number.;*/
+/*%put Column Date: the corresponding date, including year, month, and day. In the format of YYYYMMDD.;*/
+/*%put ---------------------------------------;*/
+/*proc sql;*/
+/*create table &dout as*/
+/*select a.permno, b.**/
+/*from &din as a*/
+/*left join stocknames as b*/
+/*on a.permno=b.permno and b.namedt<a.date<b.nameenddt*/
+/*;quit;*/
+/**/
+/*proc sql noprint; */
+/*select count(*)into:total*/
+/*from &dout*/
+/*;quit;*/
+/**/
+/*proc sql noprint; */
+/*select count(gvkey)into:ngvkey*/
+/*from &dout*/
+/*;quit;*/
+/**/
+/*%put overall* fill ratio: %sysevalf(&ngvkey/&total);*/
+/*%put *using gvkey fill ratio as a proxy.;*/
+/*%MEND permno_link_all;*/
+/**/
+/*%permno_link_all(din=local.permnodata,dout=a);*/

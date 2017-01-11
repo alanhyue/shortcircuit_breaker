@@ -1,4 +1,4 @@
-* Sample Cloud computing.
+* Sample Cloud computing. 
 This program reads the Compustat data on the UNIX server, downloads it to the local computer, and prints it from the local system.
 ;
 %let wrds=wrds.wharton.upenn.edu 4016;
