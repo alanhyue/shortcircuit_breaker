@@ -11,8 +11,8 @@ run;
 
 proc rank data=betas out=ranked group=5 ties=low;
 var ret;
-ranks rank;
+ranks rank_sector_beta;
 run;
 
-
-PROC PRINT DATA=rank2(OBS=100 Where=(rank=0));RUN;
+****;
+PROC PRINT DATA=ranked(OBS=10);RUN;

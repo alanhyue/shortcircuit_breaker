@@ -31,15 +31,6 @@ libname local 'C:\Users\yu_heng\Downloads\';
 
 rsubmit;
 proc upload data=validobs(keep=date gvkey permno) out=validobs;run;
-/*proc sql;*/
-/*create table seldata as*/
-/*select a.*, b.**/
-/*from validobs as a*/
-/*left join compa.funda as b*/
-/*on a.gvkey=b.gvkey and b.fyear=year(validobs.date)*/
-/*order by gvkey, fyear*/
-/*;quit;*/
-
 * select compustat datt;
 proc sql;
 create table seldata as
@@ -103,6 +94,11 @@ left join funda_avg as b
 on a.permno=b.permno
 ;quit;
 
+* save to local drive;
+data my.funda_ranked;
+set mg_funda_ranked;
+run;
+
 * dirty null deletion;
 data mg_funda_ranked;
 set mg_funda_ranked;
@@ -110,11 +106,11 @@ if ceq_avg;
 run;
 
 * testing subrank;
-proc sort data=mg_funda_ranked;by rank;run;
+proc sort data=mg_funda_ranked;by rank_sector_beta;run;
 proc rank data=mg_funda_ranked out=rank2 group=5 ties=low;
 var ceq_avg;
 ranks rank2;
-by rank;
+by rank_sector_beta;
 run;
 
 
