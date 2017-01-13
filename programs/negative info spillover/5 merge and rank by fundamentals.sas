@@ -40,11 +40,12 @@ b.tic as symbol,
 b.cusip as cusip,
 b.datadate as date,
 b.fyear as fyear,
+b.AT as AT, /* Asset total*/
+b.EBITDA as EBITDA, /*Earnings Before Interest. Cash flow ingredient(1/2)*/
 b.ceq as ceq, /*Common/Ordinary Equity - Total*/
 b.OIADP as earnings, /*Operating Income After Depreciation*/
 b.CSHO as SHOUT, /*Common Shares Outstanding*/
 b.prcc_f as prc, /*Price Close - Annual - Fiscal*/
-b.ebitda as ebitda, /*Earnings Before Interest. Cash flow ingredient(1/2)*/
 b.capx as capx /*Capital Expenditures. Cash flow ingredient (2/2)*/
 from validobs as a
 left join compa.funda as b
@@ -53,11 +54,13 @@ order by gvkey, fyear
 ;quit;
 
 * delete obs with any missing values;
+* delete obs with negative AT;
 * delete obs with negative numerator. i.e. CF, earnings, ceq;
 * delete obs with zero shares outstanding or zero share price;
 data want;
  set seldata;
  if cmiss(of _all_) then delete;
+ if AT <=0 then delete;
  cf=ebitda-capx;
  if cf<0 then delete;
  if earnings<0 then delete;
@@ -67,7 +70,9 @@ data want;
  earning_to_prc=earnings/pdt;
  book_to_market=ceq/pdt;
  cf_to_prc=cf/pdt;
- drop pdt ebitda capx;
+ ROA=EBITDA/AT;
+ size=log(AT);
+ drop pdt capx;
 run;
 proc download data=want out=funda; 
 run;
@@ -77,6 +82,8 @@ endrsubmit;
 proc sql;
 create table funda_avg as
 select permno,
+AVG(size) as size_avg,
+AVG(ROA) as ROA_avg,
 AVG(ceq) as ceq_avg,
 AVG(earnings)as earnings_avg,
 AVG(earning_to_prc) as earning_to_prc_avg
@@ -98,20 +105,3 @@ on a.permno=b.permno
 data my.merged_funda_ranked;
 set mg_funda_ranked;
 run;
-
-* dirty null deletion;
-data mg_funda_ranked;
-set mg_funda_ranked;
-if ceq_avg;
-run;
-
-* testing subrank;
-proc sort data=mg_funda_ranked;by rank_sector_beta;run;
-proc rank data=mg_funda_ranked out=rank2 group=5 ties=low;
-var ceq_avg;
-ranks rank2;
-by rank_sector_beta;
-run;
-
-
-PROC PRINT DATA=rank2(OBS=10);RUN;

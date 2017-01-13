@@ -46,4 +46,4 @@ table rank_sector_beta*pct, rank_&var;
 run;
 %MEND FundaSort;
 PROC PRINT DATA=my.mged_beta_funda_decline(OBS=3);RUN;
-%FundaSort(din=my.mged_beta_funda_decline,var=earning_to_prc_avg);
+%FundaSort(din=my.mged_beta_funda_decline,var=size_avg);
