@@ -25,5 +25,7 @@ data my.marksscb;
 set marksscb;
 run;
 
-PROC PRINT DATA=marksscb(obs=10);RUN;
+PROC PRINT DATA=marksscb(obs=10);
+title "Sample: marked sscb";
+RUN;
 

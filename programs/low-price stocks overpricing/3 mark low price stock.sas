@@ -2,9 +2,9 @@
 the circuit breaker from time point EVT+A to EVT+B. K is the price
 criterian in dollars.
 In other words:
-	if Average([EVT+A,EVT+B])<=K: dlow=1;
+	if Average([EVT+A,EVT+B])<=K: dlow_(&k)=1;
 ;
-%LET k=10;
+%LET k=30;
 %LET A=-30;
 %LET B=0;
 * build matching table for low price stocks;
@@ -45,18 +45,18 @@ order by a.permno, a.evt
 building matching table.;
 data marklow;
 set windows;
-if avgprc<=&K then dlow=1;
-	else dlow=0;
+if avgprc<=&K then dlow_&k=1;
+	else dlow_&k=0;
 run;
 * 5. mark master table with low price matching table;
 proc sql;
 create table mglow as
-select a.*, dlow = 1 as dlow
+select a.*, dlow_&k = 1 as dlow_&k
 from my.marksscb as a 
 left join marklow as b
 on a.permno = b.permno 
 	and intnx('day',b.evt,&A) <= a.date <= intnx('day',b.evt,&B)
-	and b.dlow=1
+	and b.dlow_&k=1
 order by a.permno, a.date
 ;quit;
 	* remove duplicates due to overlapping windows;

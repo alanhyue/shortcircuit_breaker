@@ -153,6 +153,16 @@ from &dout
 
 %put overall gvkey fill ratio: %sysevalf(&ngvkey/&total);
 %MEND CusipLinkGvkey;
+%MACRO PERMNO2GVKEY(din=,dout=);
+proc sql;
+create table &dout as
+select unique a.*, b.gvkey
+from &din as a
+inner join static.ccmxpf_linktable as b
+on a.permno=b.lpermno and b.linkdt<=a.date<=b.linkenddt
+order by permno, date
+;quit;
+%MEND PERMNO2GVKEY;
 
 
 

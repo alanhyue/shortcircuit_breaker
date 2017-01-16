@@ -14,7 +14,7 @@ proc upload data=my.Alive_secus out=secus;run;
 
 proc sql;
 create table seldata as
-select a.PERMNO, a.date, a.prc, a.BIDLO, a.ASKHI
+select a.*
 from crspa.dsf as a, secus as b
 where a.permno=b.permno and '01Jan2007'd<=a.date<='31Dec2013'd
 ;quit;
