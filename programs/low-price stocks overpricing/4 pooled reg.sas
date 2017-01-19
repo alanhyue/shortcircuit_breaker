@@ -16,5 +16,9 @@ model Ri_Rf=dlow: mktrf smb hml rmw cma;
 run;
 
 proc corr data=prepare;
-var Ri_Rf dsscb dlow: mktrf smb hml rmw cma;
+var Ri_Rf dsscb dlow: mktrf smb hml rmw cma INTsscbLow;
+run;
+
+proc univariate data=prepare;
+var ri_rf;
 run;
