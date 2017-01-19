@@ -20,12 +20,18 @@ dsscb=0;
 if evt then dsscb=1;
 run;
 
+* append FF5 factors;
+proc sql;
+create table marksscb_ff as
+select a.*,b.*
+from marksscb as a
+left join ff.factors_daily as b
+on a.date=b.date
+;quit;
 
 data my.marksscb;
-set marksscb;
+set marksscb_ff;
 run;
 
-PROC PRINT DATA=marksscb(obs=10);
-title "Sample: marked sscb";
-RUN;
+PROC PRINT DATA=my.marksscb(obs=10);RUN;
 

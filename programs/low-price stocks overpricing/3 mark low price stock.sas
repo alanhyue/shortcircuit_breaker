@@ -4,7 +4,7 @@ criterian in dollars.
 In other words:
 	if Average([EVT+A,EVT+B])<=K: dlow_(&k)=1;
 ;
-%LET k=30;
+%LET k=5;
 %LET A=-30;
 %LET B=0;
 * build matching table for low price stocks;

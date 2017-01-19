@@ -1,10 +1,15 @@
+data prepare;
+set mglow;
+Ri_Rf=ret-rf;
+run;
+PROC PRINT DATA=prepare(OBS=10);RUN;
+
 * pooled regression ;
-proc reg data=mglow;
-model ret=dsscb dlow:;
+proc reg data=prepare;
+model Ri_Rf=dsscb dlow: mktrf smb hml rmw cma;
 run;
 
-proc panel data=mglow;
-model ret=dsscb dlow: /parks;
-id permno date;
+
+data my.finaldata;
+set mglow;
 run;
-PROC PRINT DATA=mglow(OBS=10);RUN;
