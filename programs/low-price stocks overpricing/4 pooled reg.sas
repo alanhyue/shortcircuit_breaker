@@ -9,7 +9,11 @@ proc reg data=prepare;
 model Ri_Rf=dsscb dlow: mktrf smb hml rmw cma;
 run;
 
+* in the circuit breaker period, does low price stock suffers more?;
+proc reg data=prepare(where=(dsscb=1));
+model Ri_Rf=dlow: mktrf smb hml rmw cma;
+run;
 
-data my.finaldata;
-set mglow;
+proc corr data=prepare;
+var Ri_Rf dsscb dlow: mktrf smb hml rmw cma;
 run;

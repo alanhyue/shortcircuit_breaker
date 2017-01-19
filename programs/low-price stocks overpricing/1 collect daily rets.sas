@@ -36,9 +36,9 @@ where a.permno=b.permno and '10Nov2010'd<=a.date
 ;
 data org;
 set seldata;
-if prc<0 then prc=-prc;
-if ret<0 then ret=-ret;
-/*ret=(prc-lag(prc))/lag(prc);*/
+if prc<0 then prc=-prc; *negative bid/ask average;
+if prc=0 then delete; *0 indicates missing data;
+if missing(ret) then delete;
 run;
 
 * this will be a permanent dataset on the local pc;

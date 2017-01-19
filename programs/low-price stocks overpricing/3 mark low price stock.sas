@@ -4,47 +4,21 @@ criterian in dollars.
 In other words:
 	if Average([EVT+A,EVT+B])<=K: dlow_(&k)=1;
 ;
-%LET k=5;
+%LET k=50;
 %LET A=-30;
 %LET B=0;
 * build matching table for low price stocks;
-* 1. get permno-event observations;
-data evts;
-set my.marksscb;
-if evt;
-run;
-* 2. collect the prices around the event date;
-/*proc sql;*/
-/*create table windows as*/
-/*select a.permno, a.evt, b.date, b.prc*/
-/*from evts as a*/
-/*left join my.marksscb as b*/
-/*on a.permno=b.permno*/
-/*where a.evt+&A <= b.date <=a.evt+&B*/
-/*order by a.permno, a.evt, b.date*/
-/*;quit;*/
 proc sql;
-create table windows as
-select a.permno, a.evt, AVG(b.prc) as avgprc
-from evts as a
-left join my.marksscb as b
-on a.permno=b.permno
-where a.evt+&A <= b.date <=a.evt+&B
-group by a.permno, a.evt
-order by a.permno, a.evt
+create table avgprices as
+select a.permno,AVG(a.prc) as avgprc
+from my.marksscb as a
+group by a.permno
+order by a.permno
 ;quit;
-/** 3. calculate the average price;*/
-/*proc sql;*/
-/*create table avgprc as*/
-/*select permno, evt, AVG(prc) as avgprc*/
-/*from windows*/
-/*group by permno, evt*/
-/*order by permno, evt*/
-/*;quit;*/
 * 4. mark the low price stocks. Finishes 
 building matching table.;
 data marklow;
-set windows;
+set avgprices;
 if avgprc<=&K then dlow_&k=1;
 	else dlow_&k=0;
 run;
@@ -55,8 +29,6 @@ select a.*, dlow_&k = 1 as dlow_&k
 from my.marksscb as a 
 left join marklow as b
 on a.permno = b.permno 
-	and intnx('day',b.evt,&A) <= a.date <= intnx('day',b.evt,&B)
-	and b.dlow_&k=1
 order by a.permno, a.date
 ;quit;
 	* remove duplicates due to overlapping windows;
