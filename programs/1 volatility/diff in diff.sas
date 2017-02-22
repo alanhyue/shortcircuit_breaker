@@ -3,23 +3,19 @@ Author: Heng Yue
 Create: 2017-01-19 15:38:58
 Desc  : Prepare data for diff-in-diff regression.
 */
-* create a new copy of the table;
-data permnodata;
-set my.permnodata;
-run;
 * calculate the close-close volatility;
 * because the RET is already calculated using closing prices, 
 the close-close volatility is simply the square of RET;
 data calc;
-set permnodata;
+set my.permnodata;
 * Close-to-close volatility;
 ccvol=ret*ret; 
 * semivariance;
 lgret=log(prc/lag(prc));
 if lgret<0 then up=0;
-else up=lgret*lgret;
+	else up=lgret*lgret;
 if lgret>0 then down=0;
-else down=lgret*lgret;
+	else down=lgret*lgret;
 * Parkinson volatility;
 parkinson=log(ASKHI/BIDLO);
 run;
@@ -50,7 +46,7 @@ run;
 
 * FINALLY!;
 proc reg data=final2;
-model parkinson=DSSCB DSCBGROUP SCBINTGROUP /VIF;
+model up=DSSCB DSCBGROUP SCBINTGROUP /VIF;
 run;
 
 PROC PRINT DATA=final2(where=(DSCBGROUP=1) OBS=1000);RUN;

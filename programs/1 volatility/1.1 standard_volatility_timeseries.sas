@@ -3,6 +3,7 @@
 * create a new copy of the table;
 data permnodata;
 set my.permnodata;
+if ret;
 run;
 
 * winsorize the firm-day obs;
