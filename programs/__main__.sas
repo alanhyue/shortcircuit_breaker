@@ -5,6 +5,30 @@ libname taqref 'E:\SCB\TAQ\data\sasdata';
 %MACRO pr;
  SUBMIT "PROC PRINT DATA=_last_(obs=10);QUIT;";
 %MEND pr;
+
+%MACRO histo(din=,var=);
+proc univariate data=&din;
+var &var;
+histogram &var;
+run;
+%MEND histo;
+
+%MACRO Rank(din=,dout=,var=,n=10);
+proc sort data=&din out=_temp;
+by year symbol;
+run;
+
+proc rank data=_temp out=_temp2 group=&n ties=low;
+/*by year;*/ * rank firm-year observation;
+var &var;
+ranks &var._rank;
+run;
+
+data &dout;
+set _temp2;
+run;
+%MEND Rank;
+
 %MACRO AppendSSCBDummy(din=,dout=);
 data &dout;
 set &din;
