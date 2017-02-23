@@ -2,6 +2,7 @@
 The approach refers to the Diether et al. (2009) "It's SHO time" paper. P31.
 */
 
+* calculate intraday decline;
 data da;
 set my.permnodata;
 by permno;
