@@ -25,8 +25,8 @@ run;
 * visual check for outliers;
 %histo(din=da, var=decpct);
 %winsorize(din=da,dout=dwin,var=decpct);
-%AppendSSCBDummy(din=dwin,dout=da);
 
+%AppendSSCBDummy(din=dwin,dout=da);
 * A.1 mark obs with 10%+ intraday decline;
 data db;
 set da;
@@ -114,7 +114,7 @@ run;
 
 * average downside extreme volatility;
 proc sql;
-select TargetGroup,dsscb,AVG(decpct_avg)
+select TargetGroup,dsscb,AVG(decpct_avg) as decpct_avg_avg
 from dh
 group by TargetGroup, dsscb
 ;quit;
