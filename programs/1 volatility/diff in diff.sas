@@ -18,17 +18,20 @@ set my.permnodata;
 if prc; * delete obs with missing price info;
 if bidlo;
 by permno;
-decpct=-(bidlo-lag(prc))/lag(prc);* make decline percentage a positive number;
+decpct=(bidlo-lag(prc))/lag(prc);
 if first.permno then delete;
 run;
 
-%AppendSSCBDummy(din=da,dout=da);
+* visual check for outliers;
+%histo(din=da, var=decpct);
+%winsorize(din=da,dout=dwin,var=decpct);
+%AppendSSCBDummy(din=dwin,dout=da);
 
 * A.1 mark obs with 10%+ intraday decline;
 data db;
 set da;
-/*if decpct>=0.10 then mark=1;*/
-if decpct>=0.10 and dsscb=0 then mark=1; * mark period switch;
+/*if decpct<=-0.10 then mark=1;*/
+if decpct<=-0.10 and dsscb=0 then mark=1; * mark period switch;
 ;run;
 
 * A.2 count for each stock the number of declination 10%+;
@@ -48,7 +51,7 @@ run;
 
 %histo(din=dd,var=nTrigger);
 * Ranking on nTrigger;
-proc rank data=dc out=rankda group=10 ties=high;
+proc rank data=dc out=rankda group=10 ties=low;
 var ntrigger;
 ranks ntrigger_rank;
 run;
@@ -68,7 +71,7 @@ PROC PRINT DATA=rankda(OBS=10);RUN;
 * B.2 merge TargetGroup back to the DSF data;
 proc sql;
 create table df as
-select a.*, b.TargetGroup, b.nTrigger
+select a.*, b.TargetGroup, b.nTrigger, b.ntrigger_rank
 from da as a
 /* rank switch */
 inner join rankdb as b
@@ -81,18 +84,67 @@ set df;
 SCBINTGROUP=TargetGroup*DSSCB;
 parkinson=log(ASKHI/BIDLO);
 run;
-%winsorize(din=dg,dout=win,var=parkinson);
-%histo(din=win,var=parkinson);
 
-* date filter to shrink the sample size;
-data win;
-set win;
-if '10May2010'd<=date<='10Jan2011'd;
+* find average decpct by date & rank group;
+proc sql;
+create table dh as 
+select date, ntrigger_rank, AVG(decpct) as decpct_avg
+from dg
+group by date, ntrigger_rank
+;quit;
+
+* mark target group and scb group;
+%AppendSSCBDummy(din=dh,dout=dh);
+data dh;
+set dh;
+if ntrigger_rank=9 then TargetGroup=1;
+else TargetGroup=0;
+TargetGroup_INT_SCB=TargetGroup*dsscb;
 run;
+
 * run diff-in-diff reg using dummy variables.;
-proc reg data=win;
-model parkinson=DSSCB TargetGroup SCBINTGROUP;
+proc reg data=dh;
+model decpct_avg=DSSCB TargetGroup TargetGroup_INT_SCB;
 run;
+* date filter to shrink the sample size;
+/*data win;*/
+/*set win;*/
+/*if '10May2010'd<=date<='10Jan2011'd;*/
+/*run;*/
+
+* average downside extreme volatility;
+proc sql;
+select TargetGroup,dsscb,AVG(decpct_avg)
+from dh
+group by TargetGroup, dsscb
+;quit;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+*********LEGACY*******************;
+*********LEGACY*******************;
+*********LEGACY*******************;
 
 PROC PRINT DATA=win(OBS=10);RUN;
 * fiexed-effect test;
