@@ -12,7 +12,7 @@ table OUT:
 
 /*Step 1. Import and clean*/
 * import original short halts file;
-proc import datafile="E:\SCB\data\shorthalts\shohalts.csv" out=halts_original dbms=CSV;
+proc import datafile="E:\SCB\data\shohalts.csv" out=halts_original dbms=CSV;
 getnames=yes;
 run;
 
@@ -49,13 +49,13 @@ proc sql;
 create table halts_mg as
 select a.*, b.cusip, b.permno, b.permco, b.ncusip, b.comnam 
 from halts as a
-left join my.stocknames as b
+left join static.stocknames as b
 on a.symbol=b.ticker and b.namedt<a.date<b.nameenddt
 ;quit;
 
 * compute the ratio of successful matches out of all halts observations;
 proc sql noprint; 
-select count(*)into:total,
+select count(*)into:total
 from halts_mg
 ;quit;
 proc sql noprint; 

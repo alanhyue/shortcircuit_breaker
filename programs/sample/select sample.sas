@@ -1,7 +1,7 @@
 /* 
 Author: Heng Yue 
 Create: 2017-01-20 15:08:09
-Desc  : Select sample.
+Desc  : Select sample from CRSP daily stock file.
 Table IN: None.
 Table OUT:
 DSF (SAS dataset), daily stock return table
