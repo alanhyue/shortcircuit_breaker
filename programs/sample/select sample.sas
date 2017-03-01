@@ -2,9 +2,13 @@
 Author: Heng Yue 
 Create: 2017-01-20 15:08:09
 Desc  : Select sample.
+Table IN: None.
+Table OUT:
+DSF (SAS dataset), daily stock return table
 */
 
 /*
+NOTES:
 Name 											8-digit CUSIP
 Berkshire Hathaway Inc. Cl 'A' COM              08467010
 Berkshire Hathaway Inc. Cl 'B' COM              08467070
@@ -20,7 +24,8 @@ signon username=_prompt_;
 libname local 'C:\Users\yu_heng\Downloads\';
 
 rsubmit;
-data sample_permno;
+/*Step 1. Select stock sample.*/
+data stocks;
 set crspa.dsfhdr;
 if hshrcd=10 or hshrcd=11; * keep domestic stocks, share code 10 or 11;
 if not hsiccd 
@@ -32,26 +37,45 @@ if length(htsymbol)>4
 	or length(htick)>4 then delete; * less more than 4-letter ticker;
 run;
 
+/*Step 2. Select daily stock return data according to your stock sample.*/
+* Select daily stock records that is in our stock sample, and the date is 
+in our specified time.;
 proc sql; 
-create table sample_price_daily as
+create table dsf as
 select a.*
 from crspa.dsf as a
-inner join sample_permno as b
-on a.permno=b.permno and '01Jan2007'd<=a.date<='31Dec2013'd
+inner join stocks as b
+on a.permno=b.permno and '10Nov2009'd<=a.date<='10Nov2011'd
 ;quit;
-data sample_price_daily2;
-set sample_price_daily;
-if prc=0 then delete; * by crsp: a zero price means nor is the closing price or the bid/ask average is available;
-if prc<0 then prc=-prc; * by crsp: a bid/ask average price is marked by a negative sign;
-run;
-proc sql;
-create table sample_price_daily3 as
-select *
-from sample_price_daily2
-group by permno
-having count(PRC)=1762 
-;quit;* keep stocks exist throught the period;
 
-proc download data=sample_permno out=my.sample_permno;run;
-proc download data=sample_price_daily3 out=my.sample_price_daily;run;
+/*Step 3. Clease our firm-day sample.*/
+* delete observations with missing values;
+data dsf2;
+set dsf;
+if not prc then delete; * delete obs. with missing price;
+if not ret then delete; * delete obs. with missing return;
+if not bidlo then delete; * delete obs. with missing daily low price;
+if prc=0 then delete; * by crsp: a zero price means nor the closing price or the bid/ask average is available;
+if prc<0 then delete; * by crsp: a bid/ask average price is marked by a negative sign;
+run;
+
+proc download data=dsf2 out=my._crspdsf;run;
 endrsubmit;
+
+/*Step 4. Select stocks that are actively traded throught our sample period.*/
+* There are 503 business days between 10Nov2009 and 10Nov2011, inclusive.;
+* Select only stocks with more than 500 daily observations and save it to 
+local drive;
+proc sql;
+create table my.dsf as
+select a.*
+from my._crspdsf as a
+inner join (
+	select permno
+	from my._crspdsf
+	group by permno
+	having count(*)>=500
+	) as b
+on a.permno=b.permno
+;quit;
+
