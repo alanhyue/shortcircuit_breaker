@@ -1,6 +1,8 @@
 * merge stock return with SSCB event;
 %let windowstart=-2;
 %let windowend=2;
+
+* mark the event window;
 proc sql;
 create table mg as 
 select a.*, b.date as evt
