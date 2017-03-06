@@ -47,11 +47,11 @@ run;
 * take the highest quintile as our target group;
 data permno_mark;
 set rank_unique_permno;
-if nTrigger_rank=4 then TargetGroup=1;
-else TargetGroup=-1; * -1 means the stock triggered the breaker at 
+TargetGroup=-1; * -1 means the stock triggered the breaker at 
 						least once but not ranked in the highest decile.;
+if nTrigger_rank=4 then TargetGroup=1;
+if nTrigger_rank=0 then TargetGroup=0;
 run;
-
 * merge target dummy with volatility;
 proc sql;
 create table var_mark as
@@ -63,8 +63,7 @@ on a.permno=b.permno
 * clean&format the data for regression;
 data subvar;
 set var_mark;
-if TargetGroup=. then TargetGroup=0; * mark those never triggered the breaker as control group;
-if TargetGroup=-1 then delete; * delete those are neither control or target;
+if TargetGroup=-1 or TargetGroup=. then delete; * delete those are neither control or target;
 run;
 /*Step 3. Regression Analysis*/
 proc reg data=subvar;
