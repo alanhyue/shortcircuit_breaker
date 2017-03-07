@@ -113,5 +113,5 @@ run;
 proc reg data=dsf_halt;
 model ret = posthalt_DUM low_DUM high_DUM 
 post_low_DUM post_high_DUM
-SMB HML RMW CMA / ADJRSQ CLB STB VIF;
+SMB HML RMW CMA mktrf / ADJRSQ CLB STB VIF;
 run;
