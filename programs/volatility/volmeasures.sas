@@ -29,9 +29,15 @@ if LAG(LGDCL_DUM)=1 then LGDCL_DUM=1; *mark the following trading day.;
 SCB_LGDCL=DSSCB*LGDCL_DUM; * interaction term;
 run;
 
+* OLS regression;
 proc reg data=dsf;
 model P_var=DSSCB LGDCL_DUM SCB_LGDCL /vif;
 run;
 
-G
+* Tobit regression;
+proc qlim data = dsf ;
+  model P_var = DSSCB LGDCL_DUM SCB_LGDCL;
+  endogenous P_var ~ censored (lb=0);
+run;
+
 PROC PRINT DATA=dsf(OBS=10);RUN;
