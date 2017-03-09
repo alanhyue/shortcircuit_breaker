@@ -115,3 +115,9 @@ model ret = posthalt_DUM low_DUM high_DUM
 post_low_DUM post_high_DUM
 SMB HML RMW CMA mktrf / ADJRSQ CLB STB VIF;
 run;
+* EGARCH;
+proc autoreg data= dsf_halt ;
+      model ret = posthalt_DUM low_DUM high_DUM 
+post_low_DUM post_high_DUM
+SMB HML RMW CMA mktrf / garch=( q=1, p=1 , type = exp) ;
+run;
