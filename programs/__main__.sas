@@ -2,9 +2,31 @@ libname static "E:\SCB\data" access=readonly;
 libname ff "E:\SCB\data\ff" access=readonly;
 libname my "C:\Users\yu_heng\Downloads\";
 libname taqref 'E:\SCB\TAQ\data\sasdata';
-%MACRO pr;
- SUBMIT "PROC PRINT DATA=_last_(obs=10);QUIT;";
-%MEND pr;
+
+%MACRO prank(din=,var=);
+proc sql;
+select &var._rank, 
+count(*) as N, 
+AVG(&var) as &var._avg, 
+MAX(&var) as &var._max, 
+MIN(&var) as &var._min
+from &din
+group by &var._rank
+;quit;
+%MEND prank;
+
+%MACRO psort(din=,var=,order=1,n=10);
+%IF &order=1 %THEN %DO;* sort large to small;
+proc sort data=&din out=_temp;
+by DESCENDING &var; run;
+%END;
+%ELSE %DO;* sort small to large;
+proc sort data=&din out=_temp;
+by &var; run;
+%END;
+PROC PRINT DATA=_temp(OBS=&n);RUN;
+proc delete data=_temp;run;
+%MEND sp;
 
 %MACRO histo(din=,var=);
 proc univariate data=&din;

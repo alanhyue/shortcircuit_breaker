@@ -18,6 +18,7 @@ GK_var= (LOG(OPENPRC/LAG(PRC)))**2
 GK_vol=SQRT(GK_var);
 
 German_Klass=0.5*LOG(ASKHI/BIDLO)-0.39*(LOG(OPENPRC/LAG(PRC)));
+intravol=(ASKHI/BIDLO)/PRC;
 
 close_close=((PRC-lag_price)/lag_price)**2; *close-to-close vol.;
 close_open=((OPENPRC-lag_price)/lag_price)**2; *open-to-close volatility;
@@ -34,10 +35,21 @@ proc reg data=dsf;
 model P_var=DSSCB LGDCL_DUM SCB_LGDCL /vif;
 run;
 
+* Day- and stock- fixed effect;
+* Ref: https://pdfs.semanticscholar.org/84f5/55569662b8c4882b213cd13f75622eaf495e.pdf;
+proc glm data=dsf;
+ class permno date; *fixed effects;
+ model P_var = DSSCB LGDCL_DUM SCB_LGDCL / solution;
+run;
+quit;
+
+%REG2DSE(y=P_var, x=DSSCB LGDCL_DUM SCB_LGDCL , firm=permno, time=date, multi=0, dataset=dsf, output=Thompson);
+
 * Tobit regression;
 proc qlim data = dsf ;
   model P_var = DSSCB LGDCL_DUM SCB_LGDCL;
   endogenous P_var ~ censored (lb=0);
+model German_Klass=DSSCB LGDCL_DUM SCB_LGDCL /vif;
 run;
 
 PROC PRINT DATA=dsf(OBS=10);RUN;

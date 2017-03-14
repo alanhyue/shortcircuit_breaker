@@ -39,16 +39,16 @@ on a.sic=b.sic and a.date=b.date
 order by sic,date, permno
 ;quit;
 
-* estimate industry beta: R_ind = R_i;
+* estimate industry beta: R_i = R_ind;
 proc sort data=dsf_ind; by permno date;run;
 proc reg data=dsf_ind noprint outest=est;
-model ind_ret=ret;
+model ret=ind_ret;
 by permno;
 run;
 
 * take the stock in the lowest quintile;
 proc rank data=est out=beta_ranked group=5 ties=low;
-var ret;
+var ind_ret;
 ranks ind_beta_rank;
 run;
 
@@ -56,9 +56,9 @@ run;
 proc sql;
 select ind_beta_rank, 
 count(*) as N, 
-AVG(ret) as ind_beta_avg, 
-MAX(ret) as ind_beta_max, 
-MIN(ret) as ind_beta_min
+AVG(ind_ret) as ind_beta_avg, 
+MAX(ind_ret) as ind_beta_max, 
+MIN(ind_ret) as ind_beta_min
 from beta_ranked
 group by ind_beta_rank
 ;quit;

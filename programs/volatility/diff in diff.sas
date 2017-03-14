@@ -19,7 +19,6 @@ by permno date;
 lag_price=PRC/(RET+1); * derive the closing price on day T-1 from the return on day T.;
 decpct=(BIDLO-lag_price)/lag_price;
 run;
-
 /*Step 2. The Target Group*/
 /*Step 2.1 Preparation*/
 /*The target group is identified by the number of SCB-triggerations.*/
@@ -66,7 +65,7 @@ of SCB-triggeration.
 ;
 
 * Rank the sample by the number of triggerations.;
-proc rank data=triggerCounts out=_ranked group=10 ties=low;
+proc rank data=triggerCounts out=_ranked group=5 ties=low;
 var nTrigger;
 ranks nTrigger_rank;
 run;

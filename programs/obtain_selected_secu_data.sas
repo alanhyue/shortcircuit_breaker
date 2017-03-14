@@ -12,11 +12,14 @@ https://wrds-web.wharton.upenn.edu/wrds/tools/variable.cfm?library_id=137&file_i
 
 proc upload data=my.Alive_secus out=secus;run;
 
+* The SEC repealed the uptick rule with a compliance date of July 6, 2017.
+We are taking one year ahead of the introduction of SCB and one year after
+it as our sample.;
 proc sql;
 create table seldata as
 select a.*
 from crspa.dsf as a, secus as b
-where a.permno=b.permno and '01Jan2007'd<=a.date<='31Dec2013'd
+where a.permno=b.permno and '01Jan2009'd<=a.date<='31Dec2011'd 
 ;quit;
 * Organize the data base.
 1. calculate the return from PRC.
