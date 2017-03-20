@@ -32,18 +32,18 @@ run;
 
 * OLS regression;
 proc reg data=dsf;
-model P_var=DSSCB LGDCL_DUM SCB_LGDCL /vif;
+model P_var=DSSCB LGDCL_DUM SCB_LGDCL /vif covb;
 run;
 
 * Day- and stock- fixed effect;
 * Ref: https://pdfs.semanticscholar.org/84f5/55569662b8c4882b213cd13f75622eaf495e.pdf;
 proc glm data=dsf;
- class permno date; *fixed effects;
+ class permno; *fixed effects;
  model P_var = DSSCB LGDCL_DUM SCB_LGDCL / solution;
 run;
 quit;
 
-%REG2DSE(y=P_var, x=DSSCB LGDCL_DUM SCB_LGDCL , firm=permno, time=date, multi=0, dataset=dsf, output=Thompson);
+%REG2DSE(y=P_var, x=DSSCB LGDCL_DUM SCB_LGDCL , firm_var=permno, time_var=date, multi=0, dataset=dsf, output=Thompson);
 
 * Tobit regression;
 proc qlim data = dsf ;

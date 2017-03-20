@@ -65,7 +65,7 @@ of SCB-triggeration.
 ;
 
 * Rank the sample by the number of triggerations.;
-proc rank data=triggerCounts out=_ranked group=5 ties=low;
+proc rank data=triggerCounts out=_ranked group=10 ties=low;
 var nTrigger;
 ranks nTrigger_rank;
 run;
@@ -75,7 +75,7 @@ data Target_Def2;
 set _ranked;
 Target_DUM=.;
 if nTrigger_rank=0 then Target_DUM=0;
-if nTrigger_rank>=9 then Target_DUM=1;
+if nTrigger_rank=9 then Target_DUM=1;
 if Target_DUM=. then delete;
 run;
 
@@ -176,41 +176,13 @@ proc glm data=win;
 quit;
 
 
-%MACRO clus2OLS(yvar, xvars, cluster1, cluster2, dset);
-	/* do interesection cluster*/
-	proc surveyreg data=&dset; cluster &cluster1 &cluster2; model &yvar= &xvars /  covb; ods output CovB = CovI; quit;
-	/* Do first cluster */
-	proc surveyreg data=&dset; cluster &cluster1; model &yvar= &xvars /  covb; ods output CovB = Cov1; quit;
-	/* Do second cluster */
-	proc surveyreg data=&dset; cluster &cluster2; model &yvar= &xvars /  covb; ods output CovB = Cov2 ParameterEstimates = params;	quit;
 
-	/*	Now get the covariances numbers created above. Calc coefs, SEs, t-stats, p-vals	using COV = COV1 + COV2 - COVI*/
-	proc iml; reset noprint; use params;
-		read all var{Parameter} into varnames;
-		read all var _all_ into b;
-		use Cov1; read all var _num_ into x1;
-	 	use Cov2; read all var _num_ into x2;
-	 	use CovI; read all var _num_ into x3;
 
-		cov = x1 + x2 - x3;	/* Calculate covariance matrix */
-		dfe = b[1,3]; stdb = sqrt(vecdiag(cov)); beta = b[,1]; t = beta/stdb; prob = 1-probf(t#t,1,dfe); /* Calc stats */
 
-		print,"Parameter estimates",,varnames beta[format=8.4] stdb[format=8.4] t[format=8.4] prob[format=8.4];
 
-		  conc =    beta || stdb || t || prob;
-  		  cname = {"estimates" "stderror" "tstat" "pvalue"};
-  		  create clus2dstats from conc [ colname=cname ];
-          append from conc;
 
-		  conc =   varnames;
-  		  cname = {"varnames"};
-  		  create names from conc [ colname=cname ];
-          append from conc;
-	quit;
 
-	data clus2dstats; merge names clus2dstats; run;
-%MEND clus2OLS;
-%clus2OLS(yvar=decpct,xvars=DSSCB TargetGroup SCBINTGROUP,cluster1=permno,cluster2=date,dset=win);
+
 * LEGACY;
 *==============================;
 * calculate the close-close volatility;

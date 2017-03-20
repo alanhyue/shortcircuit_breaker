@@ -113,9 +113,10 @@ run;
 proc reg data=dsf_halt;
 model ret = posthalt_DUM low_DUM high_DUM 
 post_low_DUM post_high_DUM
-SMB HML RMW CMA mktrf / ADJRSQ CLB STB VIF;
+SMB HML RMW CMA mktrf /VIF;
 run;
-* EGARCH;
+* GARCH in mean (EGARCH);
 proc autoreg data= dsf_halt ;
-      model ret =/ garch=( q=1, p=1 , type = exp) ;
+      model ret = posthalt_DUM low_DUM high_DUM post_low_DUM post_high_DUM 
+				SMB HML RMW CMA mktrf / garch=( q=1, p=1 , type = exp, mean=sqrt) ;
 run;

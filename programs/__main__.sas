@@ -59,8 +59,35 @@ else dsscb=1;
 run;quit;
 %MEND AppendSSCBDummy;
 
-
 %MACRO Winsorize(din=,dout=,var=,pct=1);
+proc sort data=&din out=_temp;
+by &var;
+run;
+proc sql noprint;
+select count(*) into:nobs
+from _temp
+;quit;
+%let chunk=%eval(&nobs*&pct/100);
+%let begrec=%eval(0+&chunk);
+%let endrec=%eval(&nobs-&chunk);
+data _null_;
+set _temp;
+if _n_=&begrec then call symput('botvalue',&var);
+if _n_=&endrec then call symput('topvalue',&var);
+run;
+%put There are &nobs observations.;
+%put Winsorizing the lowest and highest &pct percent.;
+%put &pct percent corresponds to &chunk observations.;
+%put TopValue=&topvalue. BottomValue=&botvalue; 
+data &dout;
+set _temp;
+if &var>&topvalue then &var=&topvalue;
+if &var<&botvalue then &var=&botvalue;
+run;
+proc delete data=_temp;run;
+%MEND Winsorize;
+
+%MACRO Winsorize_cut(din=,dout=,var=,pct=1);
 proc sort data=&din out=_temp;
 by &var;
 run;
@@ -78,7 +105,7 @@ data &dout;
 set _temp(firstobs=&begrec obs=&endrec);
 run;
 proc delete data=_temp;run;
-%MEND Winsorize;
+%MEND Winsorize_cut;
 
 
 %MACRO TickerLinkPermno(din=,dout=);
