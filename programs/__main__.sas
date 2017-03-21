@@ -59,54 +59,83 @@ else dsscb=1;
 run;quit;
 %MEND AppendSSCBDummy;
 
-%MACRO Winsorize(din=,dout=,var=,pct=1);
-proc sort data=&din out=_temp;
-by &var;
-run;
-proc sql noprint;
-select count(*) into:nobs
-from _temp
-;quit;
-%let chunk=%eval(&nobs*&pct/100);
-%let begrec=%eval(0+&chunk);
-%let endrec=%eval(&nobs-&chunk);
-data _null_;
-set _temp;
-if _n_=&begrec then call symput('botvalue',&var);
-if _n_=&endrec then call symput('topvalue',&var);
-run;
-%put There are &nobs observations.;
-%put Winsorizing the lowest and highest &pct percent.;
-%put &pct percent corresponds to &chunk observations.;
-%put TopValue=&topvalue. BottomValue=&botvalue; 
-data &dout;
-set _temp;
-if &var>&topvalue then &var=&topvalue;
-if &var<&botvalue then &var=&botvalue;
-run;
-proc delete data=_temp;run;
-%MEND Winsorize;
+%macro winsorize(din=,dout=,vars=,pct=1 99);
+%WT(data=&din,out=&dout,byvar=none, vars=&vars, type=W, pctl=&pct, drop= N);
+%mend winsorize;
+%macro WT(data=_last_, out=, byvar=none, vars=, type = W, pctl = 1 99, drop= N);
 
-%MACRO Winsorize_cut(din=,dout=,var=,pct=1);
-proc sort data=&din out=_temp;
-by &var;
-run;
-proc sql noprint;
-select count(*) into:nobs
-from _temp
-;quit;
-%let chunk=%eval(&nobs*&pct/100);
-%let begrec=%eval(0+&chunk);
-%let endrec=%eval(&nobs-&chunk);
-%put There are &nobs observations.;
-%put Winsorizing the lowest and highest &pct percent.;
-%put &pct percent corresponds to &chunk observations.;
-data &dout;
-set _temp(firstobs=&begrec obs=&endrec);
-run;
-proc delete data=_temp;run;
-%MEND Winsorize_cut;
+	%if &out = %then %let out = &data;
+    
+	%let varLow=;
+	%let varHigh=;
+	%let xn=1;
 
+	%do %until (%scan(&vars,&xn)= );
+    	%let token = %scan(&vars,&xn);
+    	%let varLow = &varLow &token.Low;
+    	%let varHigh = &varHigh &token.High;
+    	%let xn = %EVAL(&xn + 1);
+	%end;
+
+	%let xn = %eval(&xn-1);
+
+	data xtemp;
+   	 	set &data;
+
+	%let dropvar = ;
+	%if &byvar = none %then %do;
+		data xtemp;
+        	set xtemp;
+        	xbyvar = 1;
+
+    	%let byvar = xbyvar;
+    	%let dropvar = xbyvar;
+	%end;
+
+	proc sort data = xtemp;
+   		by &byvar;
+
+	/*compute percentage cutoff values*/
+	proc univariate data = xtemp noprint;
+    	by &byvar;
+    	var &vars;
+    	output out = xtemp_pctl PCTLPTS = &pctl PCTLPRE = &vars PCTLNAME = Low High;
+
+	data &out;
+    	merge xtemp xtemp_pctl; /*merge percentage cutoff values into main dataset*/
+    	by &byvar;
+    	array trimvars{&xn} &vars;
+    	array trimvarl{&xn} &varLow;
+    	array trimvarh{&xn} &varHigh;
+
+    	do xi = 1 to dim(trimvars);
+			/*winsorize variables*/
+        	%if &type = W %then %do;
+            	if trimvars{xi} ne . then do;
+              		if (trimvars{xi} < trimvarl{xi}) then trimvars{xi} = trimvarl{xi};
+              		if (trimvars{xi} > trimvarh{xi}) then trimvars{xi} = trimvarh{xi};
+            	end;
+        	%end;
+			/*truncate variables*/
+        	%else %do;
+            	if trimvars{xi} ne . then do;
+              		if (trimvars{xi} < trimvarl{xi}) then trimvars{xi} = .T;
+              		if (trimvars{xi} > trimvarh{xi}) then trimvars{xi} = .T;
+            	end;
+        	%end;
+
+			%if &drop = Y %then %do;
+			   if trimvars{xi} = .T then delete;
+			%end;
+
+		end;
+    	drop &varLow &varHigh &dropvar xi;
+
+	/*delete temporary datasets created during macro execution*/
+	proc datasets library=work nolist;
+		delete xtemp xtemp_pctl; quit; run;
+
+%mend;
 
 %MACRO TickerLinkPermno(din=,dout=);
 %put ---------------------------------------;
