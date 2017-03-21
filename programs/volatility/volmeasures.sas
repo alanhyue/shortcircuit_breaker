@@ -6,6 +6,8 @@ lag_price=PRC/(RET+1); * derive the closing price in the previous trading day;
 
 P_var=(LOG(ASKHI/BIDLO))**2/(4*LOG(2)); * 1-day Parkinson variance;
 P_vol=SQRT(P_var);
+if p_var<=0 then p_var_lg=LOG(0.01);
+	else p_var_lg=LOG(p_var);
 
 RS_var= LOG(ASKHI/OPENPRC)*LOG(ASKHI/PRC) 
 	+ LOG(BIDLO/OPENPRC)*LOG(BIDLO/PRC); * 1-day Rogers, Satchell, and Yoon 1994;
@@ -32,14 +34,14 @@ run;
 
 * OLS regression;
 proc reg data=dsf;
-model P_var=DSSCB LGDCL_DUM SCB_LGDCL /vif covb;
+model p_var_lg=DSSCB LGDCL_DUM SCB_LGDCL /vif covb;
 run;
 
-* Day- and stock- fixed effect;
+* Firm- fixed effect;
 * Ref: https://pdfs.semanticscholar.org/84f5/55569662b8c4882b213cd13f75622eaf495e.pdf;
 proc glm data=dsf;
- class permno; *fixed effects;
- model P_var = DSSCB LGDCL_DUM SCB_LGDCL / solution;
+ absorb date; *fixed effects;
+ model p_var = DSSCB LGDCL_DUM SCB_LGDCL/ solution noint;
 run;
 quit;
 
@@ -49,7 +51,6 @@ quit;
 proc qlim data = dsf ;
   model P_var = DSSCB LGDCL_DUM SCB_LGDCL;
   endogenous P_var ~ censored (lb=0);
-model German_Klass=DSSCB LGDCL_DUM SCB_LGDCL /vif;
 run;
 
 PROC PRINT DATA=dsf(OBS=10);RUN;
