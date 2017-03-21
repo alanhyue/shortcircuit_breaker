@@ -19,36 +19,56 @@ if hsiccd;
 _temp=put(hsiccd,4.);
 sic=substr(_temp,1,1);
 if sic=. then sic=0;
+mktcap=PRC*SHROUT*1000;
 run;
 
-* find daily industry avg ret;
+* find daily indstry total MKTCAP;
 proc sql;
-create table ind_indices as
-select a.sic, a.date, AVG(a.ret) as ind_ret
+create table indcap_daily as
+select a.date, a.sic, sum(a.mktcap) as indcap
 from dsf as a
-group by sic, date
+group by date, sic
+;quit;
+*merge indcap;
+proc sql;
+create table dsfind as
+select a.*, b.indcap
+from dsf as a
+left join indcap_daily as b
+on a.date=b.date and a.sic=b.sic
+;quit;
+* calculate industry portfolio weights;
+data dsfweight;
+set dsfind;
+w=mktcap/indcap;
+run;
+* calculate VW industry portfolio return;
+proc sql;
+create table indport as
+select a.*, sum(a.ret*a.w) as indret
+from dsfweight as a
+group by date, sic
 ;quit;
 
-* attach the industry returns to dsf;
+*merge risk-free rate;
 proc sql;
-create table dsf_ind as
-select a.*, b.ind_ret
-from dsf as a
-left join ind_indices as b
-on a.sic=b.sic and a.date=b.date
-order by sic,date, permno
+create table indfull as
+select a.*,b.rf, a.indret-b.rf as indrf
+from indport as a
+left join ff.factors_daily as b
+on a.date=b.date
 ;quit;
 
-* estimate industry beta: R_i = R_ind;
-proc sort data=dsf_ind; by permno date;run;
-proc reg data=dsf_ind noprint outest=est;
-model ret=ind_ret;
+* estimate industry beta: R_i = rf + beta*(indret-rf);
+proc sort data=indfull; by permno date;run;
+proc reg data=indfull noprint outest=est;
+model ret = indrf / noint vif;
 by permno;
 run;
 
 * take the stock in the lowest quintile;
 proc rank data=est out=beta_ranked group=5 ties=low;
-var ind_ret;
+var indrf;
 ranks ind_beta_rank;
 run;
 
@@ -56,9 +76,9 @@ run;
 proc sql;
 select ind_beta_rank, 
 count(*) as N, 
-AVG(ind_ret) as ind_beta_avg, 
-MAX(ind_ret) as ind_beta_max, 
-MIN(ind_ret) as ind_beta_min
+AVG(indrf) as ind_beta_avg, 
+MAX(indrf) as ind_beta_max, 
+MIN(indrf) as ind_beta_min
 from beta_ranked
 group by ind_beta_rank
 ;quit;
