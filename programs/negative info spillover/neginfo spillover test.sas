@@ -129,14 +129,17 @@ post_low_DUM=posthalt_DUM*low_DUM;
 post_high_DUM=posthalt_DUM*high_DUM;
 run;
 
+%let dep=ret;
+%let indep=halt_DUM posthalt_DUM low_DUM high_DUM post_low_DUM post_high_DUM SMB HML RMW CMA mktrf;
+
+proc corr data=dsf_halt;
+var &dep &indep ;
+run;
 /*Step 4. Regression Analysis*/
 proc reg data=dsf_halt;
-model ret = posthalt_DUM low_DUM high_DUM 
-post_low_DUM post_high_DUM
-SMB HML RMW CMA mktrf /VIF;
+model &dep = &indep /VIF;
 run;
 * GARCH in mean (EGARCH);
 proc autoreg data= dsf_halt ;
-      model ret = posthalt_DUM low_DUM high_DUM post_low_DUM post_high_DUM 
-				SMB HML RMW CMA mktrf / garch=( q=1, p=1 , type = exp, mean=sqrt) ;
+      model &dep = &indep / garch=( q=1, p=1 , type = exp, mean=sqrt) ;
 run;
