@@ -49,15 +49,6 @@ However, the identification of target stocks are in the same fashion among
 all the target definitions. That is, Target stocks are marked by Target_DUM=1 whereas 
 control stocks are marked by Target_DUM=0.*/
 
-* Definition 1. 
-Target group are stocks that ever triggered the breaker. 
-Control group are stocks that never triggered the breaker.;
-data Target_Def1;
-set triggerCounts;
-if nTrigger>0 then Target_DUM=1;
-else Target_DUM=0;
-run;
-
 * Definition 2.
 Target group (Control group) are stocks in the highest (lowest) 
 decile portfolio when the whole sample is ranked by the number 
@@ -98,37 +89,76 @@ Target_INT_SCB=Target_DUM*DSSCB;
 run;
 
 /*Step 4. Regression Analysis*/
-/*Step 4.1 Diff-in-diff regression on firm-day observation decpct.*/
-proc reg data=dsf_full;
-model decpct=DSSCB Target_DUM Target_INT_SCB;
-run;
-
 /*Step 4.2 Diff-in-diff regression on the cross-sectional average of decpct.*/
-* find average decpct by date & rank group;
+* cross-sectional avg for target and conrol groups;
 proc sql;
 create table sfavg as 
-select date, ntrigger_rank, AVG(decpct) as decpct_avg
+select date, Target_DUM, AVG(decpct) as decpct_avg
 from dsf_full
-group by date, ntrigger_rank
+group by date, Target_DUM
+;quit;
+* tabulate the result and calc the dif;
+proc sql;
+create table sfavgm as
+select a.date, a.decpct_avg as tgt, b.decpct_avg as ctr, a.decpct_avg-b.decpct_avg as dif
+from sfavg as a
+left join sfavg as b
+on a.date=b.date
+where a.target_DUM=1 and b.target_DUM=0
 ;quit;
 
 * Attach the SCB dummy;
-%AppendSSCBDummy(din=sfavg,dout=sfsfavg_scbdummy);
-
-* Attach the Target dummy and calculate the interaction term.;
-data sfavg_full;
-set sfsfavg_scbdummy;
-if ntrigger_rank=9 then Target_DUM=1;
-else Target_DUM=0;
-Target_INT_SCB=Target_DUM*DSSCB;
-run;
+%AppendSSCBDummy(din=sfavgm,dout=sfsfavg_scbdummy);
 
 * run diff-in-diff reg u;
-proc reg data=sfavg_full;
-model decpct_avg=DSSCB Target_DUM Target_INT_SCB;
+proc reg data=sfsfavg_scbdummy TABLEOUT outest=est;
+model dif=DSSCB;
+model tgt=DSSCB;
+model ctr=DSSCB;
+run;
+
+PROC PRINT DATA=est(OBS=10);RUN;
+
+proc sort data=pe; by variable; run;
+
+
+* calculate Newey-West stderr;
+%let lags=6; * determined by the Stock-Watson default m:http://www.ssc.wisc.edu/~bhansen/390/390Lecture16.pdf P24;
+%let Y=dif;
+ods output parameterestimates=nw;
+ods listing close;
+proc model data=whatwin;
+ endo &y;
+ exog DSSCB;
+ instruments _exog_;
+ parms b0 b1;
+ &y=b0+b1*DSSCB;
+ fit &y / gmm kernel=(bart,%eval(&lags+1),0) vardef=n; run;
+quit;
+ods listing;
+proc print data=nw; id variable;
+ var estimate--df; format estimate stderr 7.4;
 run;
 
 
+* NW macro;
+%MACRO NeweyWest(din=,y=,x=,lags=);
+ods output parameterestimates=nw;
+ods listing close;
+proc model data=&din;
+ endo &y;
+ exog &x;
+ instruments _exog_;
+ parms b0 b1; * how to generate this;
+ &y=b0+b1*DSSCB; * how to genrate this;
+ fit &y / gmm kernel=(bart,%eval(&lags+1),0) vardef=n; run;
+quit;
+ods listing;
+
+proc print data=nw; id variable;
+ var estimate--df; format estimate stderr 7.4;
+run;
+%MEND;
 
 
 
