@@ -93,14 +93,24 @@ run;
 * cross-sectional avg for target and conrol groups;
 proc sql;
 create table sfavg as 
-select date, Target_DUM, AVG(decpct) as decpct_avg
+select date, Target_DUM, 
+	AVG(decpct) as decpct_avg,
+	AVG(P_vol) as P_vol_avg,
+	AVG(intravol) as intravol_avg,
+	AVG(close_close) as close_close_avg,
+	AVG(close_open) as close_open_avg
 from dsf_full
 group by date, Target_DUM
 ;quit;
 * tabulate the result and calc the dif;
 proc sql;
 create table sfavgm as
-select a.date, a.decpct_avg as tgt, b.decpct_avg as ctr, a.decpct_avg-b.decpct_avg as dif
+select a.date, 
+a.decpct_avg as decpct_tgt, b.decpct_avg as decpct_ctr, a.decpct_avg-b.decpct_avg as decpct_dif,
+a.P_vol_avg as P_vol_tgt, b.P_vol_avg as P_vol_ctr, a.P_vol_avg-b.P_vol_avg as P_vol_dif,
+a.intravol_avg as intravol_tgt, b.intravol_avg as intravol_ctr, a.intravol_avg-b.intravol_avg as intravol_dif,
+a.close_close_avg as close_close_tgt, b.close_close_avg as close_close_ctr, a.close_close_avg-b.close_close_avg as close_close_dif,
+a.close_open_avg as close_open_tgt, b.close_open_avg as close_open_ctr, a.close_open_avg-b.close_open_avg as close_open_dif
 from sfavg as a
 left join sfavg as b
 on a.date=b.date
@@ -112,20 +122,64 @@ where a.target_DUM=1 and b.target_DUM=0
 
 * run diff-in-diff reg u;
 proc reg data=sfsfavg_scbdummy TABLEOUT outest=est;
-model dif=DSSCB;
-model tgt=DSSCB;
-model ctr=DSSCB;
+model decpct_tgt=DSSCB;
+model decpct_ctr=DSSCB;
+model decpct_dif=DSSCB;
+model P_vol_tgt=DSSCB;
+model P_vol_ctr=DSSCB;
+model P_vol_dif=DSSCB;
+model intravol_tgt=DSSCB;
+model intravol_ctr=DSSCB;
+model intravol_dif=DSSCB;
+model close_close_tgt=DSSCB;
+model close_close_ctr=DSSCB;
+model close_close_dif=DSSCB;
+model close_open_tgt=DSSCB;
+model close_open_ctr=DSSCB;
+model close_open_dif =DSSCB;
 run;
 
 * transpose the result to a wide format;
 proc sort data=est; by _DEPVAR_;run;
-proc transpose data=est(drop=_MODEL_ _RMSE_ dif tgt ctr) out=test;
+proc transpose data=est(drop=_MODEL_ _RMSE_) out=trans;
 id _TYPE_;
 by _DEPVAR_;
 run;
-PROC PRINT DATA=test(OBS=100);RUN;
+data trans;
+set trans;
+if T;
+run;
+proc transpose data=trans out=t2;
+by _depvar_;
+id _name_;
+var parms T;
+run;
+proc transpose data=t2;
+id _depvar_;
+run;
+data t3;
+set t2;
+if _NAME_='PARMS' then do;
+	pre=intercept;
+	post=intercept+1*dsscb;
+end;
+dep=substr(_DEPVAR_,1,length(_DEPVAR_)-4);
+type=substr(_DEPVAR_,length(_DEPVAR_)-2,3);
+name=_NAME_;
+run;
+PROC PRINT DATA=t3(OBS=100);RUN;
+proc tabulate data=t3 format=8.5;
+var  dsscb pre post ;
+class dep name type;
+table dep*name, type*(pre post dsscb );
+run;
+****end tranpose output;
 
-proc sort data=pe; by variable; run;
+
+
+
+
+
 
 
 * calculate Newey-West stderr;
