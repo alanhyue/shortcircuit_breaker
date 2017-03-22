@@ -117,7 +117,13 @@ model tgt=DSSCB;
 model ctr=DSSCB;
 run;
 
-PROC PRINT DATA=est(OBS=10);RUN;
+* transpose the result to a wide format;
+proc sort data=est; by _DEPVAR_;run;
+proc transpose data=est(drop=_MODEL_ _RMSE_ dif tgt ctr) out=test;
+id _TYPE_;
+by _DEPVAR_;
+run;
+PROC PRINT DATA=test(OBS=100);RUN;
 
 proc sort data=pe; by variable; run;
 
