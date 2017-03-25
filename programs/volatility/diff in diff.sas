@@ -13,23 +13,49 @@ Table OUT:
 
 /*Step 1. Calculate the decpct variable.*/
 * calculate intraday decline;
+%AppendSSCBDummy(din=static.dsf,dout=dsf);
 data dsf;
-set static.dsf;
-by permno date;
-lag_price=PRC/(RET+1); * derive the closing price on day T-1 from the return on day T.;
-decpct=(BIDLO-lag_price)/lag_price;
+set dsf;
+by permno;
+lag_price=PRC/(RET+1); * derive the closing price in the previous trading day;
+
+P_var=(LOG(ASKHI/BIDLO))**2/(4*LOG(2)); * 1-day Parkinson variance;
+P_vol=SQRT(P_var);
+
+RS_var= LOG(ASKHI/OPENPRC)*LOG(ASKHI/PRC) 
+	+ LOG(BIDLO/OPENPRC)*LOG(BIDLO/PRC); * 1-day Rogers, Satchell, and Yoon 1994;
+RS_vol=SQRT(RS_var);
+
+GK_var= (LOG(OPENPRC/LAG(PRC)))**2
+	- 0.383*(LOG(PRC/OPENPRC))**2
+	+ 1.364*P_var
+	+ 0.019*RS_var; *Garman and Klass (1980) minimum-variance unbiased variace estimator;
+GK_vol=SQRT(GK_var);
+
+German_Klass=0.5*LOG(ASKHI/BIDLO)-0.39*(LOG(OPENPRC/LAG(PRC)));
+intravol=(ASKHI/BIDLO)/PRC;
+
+close_close=((PRC-lag_price)/lag_price)**2; *close-to-close vol.;
+close_open=((OPENPRC-lag_price)/lag_price)**2; *open-to-close volatility;
+
+intraday_decline=(BIDLO-lag_price)/lag_price;
+intraday_raise=(ASKHI-lag_price)/lag_price;
+LGDCL_DUM=0; *initialize large intraday decline dummy;
+if intraday_decline<=-0.10 then LGDCL_DUM=1; *mark the day large decline occurs;
+if LAG(LGDCL_DUM)=1 then LGDCL_DUM=1; *mark the following trading day.;
+SCB_LGDCL=DSSCB*LGDCL_DUM; * interaction term;
 run;
+
 /*Step 2. The Target Group*/
 /*Step 2.1 Preparation*/
 /*The target group is identified by the number of SCB-triggerations.*/
 
 * Mark the SCB-triggerations;
-%AppendSSCBDummy(din=dsf,dout=dsfwin);
 data dsfmark;
-set dsfwin;
+set dsf;
 trigger_DUM=.;
-/*if decpct<=-0.10 then trigger_DUM=1; * mark based on intraday decline in the whole sample.*/
-if decpct<=-0.10 and dsscb=0 then trigger_DUM=1; * mark based on intraday decline in pre-SCB period.;
+if intraday_decline<=-0.10 then trigger_DUM=1; * mark based on intraday decline in the whole sample.
+/*if decpct<=-0.10 and dsscb=0 then trigger_DUM=1; * mark based on intraday decline in pre-SCB period.;*/
 ;run;
 
 * Generates SCB-triggeration counts.;
@@ -56,17 +82,18 @@ of SCB-triggeration.
 ;
 
 * Rank the sample by the number of triggerations.;
+%let rankvar=nTrigger;
 proc rank data=triggerCounts out=_ranked group=10 ties=low;
-var nTrigger;
-ranks nTrigger_rank;
+var &rankvar;
+ranks &rankvar._rank;
 run;
-
+%prank(din=_ranked,var=&rankvar);
 * Mark the highest (lowest) portfolio as Target (Control) gorup.;
 data Target_Def2;
 set _ranked;
 Target_DUM=.;
-if nTrigger_rank=0 then Target_DUM=0;
-if nTrigger_rank=9 then Target_DUM=1;
+if &rankvar._rank=0 then Target_DUM=0;
+if &rankvar._rank=9 then Target_DUM=1;
 if Target_DUM=. then delete;
 run;
 
@@ -94,7 +121,8 @@ run;
 proc sql;
 create table sfavg as 
 select date, Target_DUM, 
-	AVG(decpct) as decpct_avg,
+	AVG(intraday_decline) as decpct_avg,
+	AVG(intraday_raise) as raipct_avg,
 	AVG(P_vol) as P_vol_avg,
 	AVG(intravol) as intravol_avg,
 	AVG(close_close) as close_close_avg,
@@ -107,6 +135,7 @@ proc sql;
 create table sfavgm as
 select a.date, 
 a.decpct_avg as decpct_tgt, b.decpct_avg as decpct_ctr, a.decpct_avg-b.decpct_avg as decpct_dif,
+a.raipct_avg as raipct_tgt, b.raipct_avg as raipct_ctr, a.raipct_avg-b.raipct_avg as raipct_dif,
 a.P_vol_avg as P_vol_tgt, b.P_vol_avg as P_vol_ctr, a.P_vol_avg-b.P_vol_avg as P_vol_dif,
 a.intravol_avg as intravol_tgt, b.intravol_avg as intravol_ctr, a.intravol_avg-b.intravol_avg as intravol_dif,
 a.close_close_avg as close_close_tgt, b.close_close_avg as close_close_ctr, a.close_close_avg-b.close_close_avg as close_close_dif,
@@ -121,7 +150,10 @@ where a.target_DUM=1 and b.target_DUM=0
 %AppendSSCBDummy(din=sfavgm,dout=sfsfavg_scbdummy);
 
 * run diff-in-diff reg u;
-proc reg data=sfsfavg_scbdummy TABLEOUT outest=est;
+proc reg data=sfsfavg_scbdummy TABLEOUT outest=est noprint;
+model raipct_tgt=DSSCB;
+model raipct_ctr=DSSCB;
+model raipct_dif=DSSCB;
 model decpct_tgt=DSSCB;
 model decpct_ctr=DSSCB;
 model decpct_dif=DSSCB;
