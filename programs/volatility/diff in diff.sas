@@ -54,14 +54,14 @@ run;
 data dsfmark;
 set dsf;
 trigger_DUM=.;
-if intraday_decline<=-0.10 then trigger_DUM=1; * mark based on intraday decline in the whole sample.
-/*if decpct<=-0.10 and dsscb=0 then trigger_DUM=1; * mark based on intraday decline in pre-SCB period.;*/
+/*if intraday_decline<=-0.10 then trigger_DUM=1; * mark based on intraday decline in the whole sample.*/
+if intraday_decline<=-0.10 and dsscb=0 then trigger_DUM=1; * mark based on intraday decline in pre-SCB period.;
 ;run;
 
 * Generates SCB-triggeration counts.;
 proc sql;
-create table triggerCounts as
-select permno, count(trigger_DUM) as nTrigger
+create table dec as
+select permno, AVG(intraday_decline) as decavg
 from dsfmark
 group by permno
 ;quit;
@@ -82,8 +82,8 @@ of SCB-triggeration.
 ;
 
 * Rank the sample by the number of triggerations.;
-%let rankvar=nTrigger;
-proc rank data=triggerCounts out=_ranked group=10 ties=low;
+%let rankvar=decavg;
+proc rank data=dec out=_ranked group=10 ties=low;
 var &rankvar;
 ranks &rankvar._rank;
 run;
@@ -92,15 +92,15 @@ run;
 data Target_Def2;
 set _ranked;
 Target_DUM=.;
-if &rankvar._rank=0 then Target_DUM=0;
-if &rankvar._rank=9 then Target_DUM=1;
+if &rankvar._rank=0 then Target_DUM=1;
+if &rankvar._rank=9 then Target_DUM=0;
 if Target_DUM=. then delete;
 run;
 
 /*Step 2.3 Mark Target stocks in the daily stock data.*/
 proc sql;
 create table dsfmarked as
-select a.*, b.Target_DUM, b.nTrigger, b.nTrigger_rank
+select a.*, b.Target_DUM
 from dsf as a
 inner join Target_Def2 as b
 on a.permno=b.permno
@@ -199,7 +199,6 @@ dep=substr(_DEPVAR_,1,length(_DEPVAR_)-4);
 type=substr(_DEPVAR_,length(_DEPVAR_)-2,3);
 name=_NAME_;
 run;
-PROC PRINT DATA=t3(OBS=100);RUN;
 proc tabulate data=t3 format=8.5;
 var  dsscb pre post ;
 class dep name type;
