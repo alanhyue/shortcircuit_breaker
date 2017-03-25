@@ -54,8 +54,8 @@ run;
 data dsfmark;
 set dsf;
 trigger_DUM=.;
-if intraday_decline<=-0.10 then trigger_DUM=1; * mark based on intraday decline in the whole sample.
-/*if decpct<=-0.10 and dsscb=0 then trigger_DUM=1; * mark based on intraday decline in pre-SCB period.;*/
+/*if intraday_decline<=-0.10 then trigger_DUM=1; * mark based on intraday decline in the whole sample.*/
+if intraday_decline<=-0.10 and dsscb=0 then trigger_DUM=1; * mark based on intraday decline in pre-SCB period.;
 ;run;
 
 * Generates SCB-triggeration counts.;
