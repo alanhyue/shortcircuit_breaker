@@ -3,6 +3,22 @@ libname ff "E:\SCB\data\ff" access=readonly;
 libname my "C:\Users\yu_heng\Downloads\";
 libname taqref 'E:\SCB\TAQ\data\sasdata';
 
+%macro orgRegEst(est=,dout=);
+* organize the estimation output of proc reg with option tableout specified;
+proc sort data=&est; by _DEPVAR_;run;
+proc transpose data=&est(drop=_MODEL_ _RMSE_) out=_trans;
+id _TYPE_;
+by _DEPVAR_;
+run;
+* filter unrelated variables for each model;
+data &dout;
+set _trans;
+if T;
+run;
+proc delete data=_trans;run;
+%mend orgRegEst;
+
+
 %MACRO prank(din=,var=);
 proc sql;
 select &var._rank, 
@@ -36,18 +52,9 @@ run;
 %MEND histo;
 
 %MACRO Rank(din=,dout=,var=,n=10);
-proc sort data=&din out=_temp;
-by year symbol;
-run;
-
-proc rank data=_temp out=_temp2 group=&n ties=low;
-/*by year;*/ * rank firm-year observation;
+proc rank data=&din out=&dout group=&n ties=low;
 var &var;
 ranks &var._rank;
-run;
-
-data &dout;
-set _temp2;
 run;
 %MEND Rank;
 
