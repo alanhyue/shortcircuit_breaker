@@ -16,19 +16,18 @@ Table OUT:
 %include "dsfcalculation.sas";
 *P_vol RS_vol GK_vol intravol close_close close_open;
 %calcdif(var=P_var,dout=P_var_est);
-%calcdif(var=P_vol,dout=P_vol_est);
-%calcdif(var=RS_var,dout=RS_var_est);
-%calcdif(var=RS_vol,dout=RS_vol_est);
-%calcdif(var=GK_var,dout=GK_var_est);
-%calcdif(var=GK_vol,dout=GK_vol_est);
-%calcdif(var=German_Klass,dout=German_Klass_est);
+%calcdif(var=semiup,dout=semiup_est);
+%calcdif(var=semidown,dout=semidown_est);
+%calcdif(var=prcRange,dout=prcRange_est);
+
 %calcdif(var=intravol,dout=intravol_est);
 %calcdif(var=close_close,dout=close_close_est);
 %calcdif(var=close_open,dout=close_open_est);
 %calcdif(var=intraday_decline,dout=intraday_decline_est);
 %calcdif(var=intraday_raise,dout=intraday_raise_est);
 data result;
-set P_var_est P_vol_est RS_var_est RS_vol_est GK_var_est GK_vol_est German_Klass_est intravol_est close_close_est close_open_est intraday_decline_est intraday_raise_est;
+format variable $10.;
+set P_var_est semiup_est semidown_est prcRange_est intravol_est close_close_est close_open_est intraday_decline_est intraday_raise_est;
 run;
 
 *tabulate the result;
@@ -37,7 +36,8 @@ by variable _depvar_;
 run;
 proc transpose data=result out=t2;
 by variable _depvar_;
-var parms T;
+var parms pvalue;
+id _name_;
 run;
 data t3;
 set t2;
