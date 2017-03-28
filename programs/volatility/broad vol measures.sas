@@ -19,15 +19,12 @@ Table OUT:
 %calcdif(var=semiup,dout=semiup_est);
 %calcdif(var=semidown,dout=semidown_est);
 %calcdif(var=prcRange,dout=prcRange_est);
-
 %calcdif(var=intravol,dout=intravol_est);
 %calcdif(var=close_close,dout=close_close_est);
 %calcdif(var=close_open,dout=close_open_est);
-%calcdif(var=intraday_decline,dout=intraday_decline_est);
-%calcdif(var=intraday_raise,dout=intraday_raise_est);
 data result;
 format variable $10.;
-set P_var_est semiup_est semidown_est prcRange_est intravol_est close_close_est close_open_est intraday_decline_est intraday_raise_est;
+set P_var_est semiup_est semidown_est prcRange_est intravol_est close_close_est close_open_est ;
 run;
 
 *tabulate the result;
