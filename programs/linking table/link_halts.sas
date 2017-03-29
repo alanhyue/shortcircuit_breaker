@@ -11,7 +11,7 @@ run;
 
 PROC PRINT DATA=my.haltslink(OBS=10);RUN;
 
-proc sort data=my.haltslink out=_temp; nodup;by descending date ticker;run;
+proc sort data=my.haltslink out=_temp nodup;by descending date ticker;run;
 data my.haltslink_clean;
 set _temp;
 if date>='01Jan2016'd then delete;* delete obs outside of matching db;

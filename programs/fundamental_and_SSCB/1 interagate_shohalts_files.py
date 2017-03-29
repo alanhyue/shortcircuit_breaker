@@ -2,7 +2,7 @@ import sys
 sys.path.append("..")
 import ytZoo
 
-flist=ytZoo.GetFileList(r"E:\SCB\data\backup01Mar2017\shorthalts\original txt")
+flist=ytZoo.GetFileList(r"E:\SCB\data\backup01Mar2017\shorthalts\Nasdaq")
 # Get the variable names
 a=flist[1]
 head=open(a,'r').readline()

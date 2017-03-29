@@ -1,4 +1,4 @@
-* extract the year number from the halts datetime varible;
+..* extract the year number from the halts datetime varible;
 data withyear_sscb;
 set my.halts;
 year=year(datepart(Trigger_Time));

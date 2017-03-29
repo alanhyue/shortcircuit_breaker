@@ -156,7 +156,7 @@ proc sql;
 create table &dout as
 select a.ticker, b.permno, a.*
 from &din as a
-left join stocknames as b
+left join static.stocknames as b
 on a.ticker=b.ticker and b.namedt<a.date<b.nameenddt
 ;quit;
 %MEND TickerLinkPermno;
@@ -206,7 +206,7 @@ proc sql;
 create table &dout as
 select a.ticker, b.cusip, b.permno, b.permco, b.ncusip, b.comnam, a.*
 from &din as a
-left join stocknames as b
+left join static.stocknames as b
 on a.ticker=b.ticker and b.namedt<a.date<b.nameenddt
 ;quit;
 
@@ -275,20 +275,34 @@ order by permno, date
 %MEND PERMNO2GVKEY;
 
 
-* Newey-West stderr estimation;
-/*%let lag=5;*/
-/*ods output parameterestimates=nw;*/
-/*ods listing close;*/
-/*proc model data=your_data;*/
-/* endo Y;*/
-/* exog X;*/
-/* instruments _exog_;*/
-/* parms b0 b1; * your parameters;*/
-/* Y=b0+b1*DSSCB; * your model;*/
-/* fit Y / gmm kernel=(bart,%eval(&lags+1),0) vardef=n; run;*/
-/*quit;*/
-/*ods listing;*/
+
+/* WORKING ...!! */
+/*%MACRO permno_link_all(din=,dout=);*/
+/*%put The input table (din) has to have two columns named ;*/
+/*%put exactly as "permno" and "Date".; */
+/*%put Column permno: the CRSP PERMNO identification number.;*/
+/*%put Column Date: the corresponding date, including year, month, and day. In the format of YYYYMMDD.;*/
+/*%put ---------------------------------------;*/
+/*proc sql;*/
+/*create table &dout as*/
+/*select a.permno, b.**/
+/*from &din as a*/
+/*left join stocknames as b*/
+/*on a.permno=b.permno and b.namedt<a.date<b.nameenddt*/
+/*;quit;*/
 /**/
-/*proc print data=nw; id variable;*/
-/* var estimate--df; format estimate stderr 7.4;*/
-/*run;*/
+/*proc sql noprint; */
+/*select count(*)into:total*/
+/*from &dout*/
+/*;quit;*/
+/**/
+/*proc sql noprint; */
+/*select count(gvkey)into:ngvkey*/
+/*from &dout*/
+/*;quit;*/
+/**/
+/*%put overall* fill ratio: %sysevalf(&ngvkey/&total);*/
+/*%put *using gvkey fill ratio as a proxy.;*/
+/*%MEND permno_link_all;*/
+/**/
+/*%permno_link_all(din=local.permnodata,dout=a);*/

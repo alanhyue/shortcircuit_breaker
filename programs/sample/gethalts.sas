@@ -5,12 +5,13 @@ signon username=_prompt_;
 libname local 'C:\Users\yu_heng\Downloads\';
 
 rsubmit;
-proc sort data=crspa.dsf(where=(date>="10Nov2011"d)) out=crsp; by permno date;run;
+proc sort data=crspa.dsf(where=(date>="10Nov2010"d)) out=crsp; by permno date;run;
 data crsp;
 set crsp;
-by permno;
 if PRC;
 if RET;
+if BIDLO=0 then delete; *The field is set to zero if no Bid or Low Price is available;
+by permno;
 if PRC<0 then PRC=-PRC;
 * initialize variables;
 halt=0;
@@ -23,7 +24,7 @@ ldate=lag(date);
 prev=date-1;
 format ldate date9.;
 format prev date9.;
-lag_price=PRC/(RET+1);
+lag_price=lag(PRC);
 dec=(BIDLO-lag_price)/lag_price;
 if dec<= -0.10 then halt=1;
 lhalt=lag(halt);
@@ -32,6 +33,14 @@ if halt=1 or leftover=1 then effect=1;
 if halt=1 and leftover=1 then cal_refresh=1;
 if halt=1 and lhalt=1 then trd_refresh=1;
 run;
+
+* form halt records;
+proc sql; 
+create table records as
+select permno, date, halt, effect
+from crsp
+where halt=1 or effect=1
+;quit;
 
 * calculate halt effects;
 proc sql;
@@ -47,8 +56,9 @@ from crsp
 group by date
 order by date
 ;quit;
+
 proc download data=halt out=my.haltstats;run;
-proc download data=crsp out=my.crsphalt;run;
+proc download data=records out=my.crsphalt;run;
 endrsubmit;
 
 
