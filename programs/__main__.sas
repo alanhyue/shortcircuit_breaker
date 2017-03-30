@@ -204,10 +204,10 @@ on a.ticker=b.ticker and b.namedt<a.date<b.nameenddt
 %put ---------------------------------------;
 proc sql;
 create table &dout as
-select a.ticker, b.cusip, b.permno, b.permco, b.ncusip, b.comnam, a.*
+select a.ticker, b.cusip, b.permno, b.permco, b.ncusip, b.comnam, b.hexcd, a.*
 from &din as a
 left join static.stocknames as b
-on a.ticker=b.ticker and b.namedt<a.date<b.nameenddt
+on a.ticker=b.ticker and b.namedt<=a.date<=b.nameenddt
 ;quit;
 
 proc sql noprint; 
