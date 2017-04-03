@@ -40,7 +40,7 @@ proc sort data=comb out=sorted dupout=dups nodupkey;by ticker date;run;
 
 * match PERMNO from crsp;
 %TickerLinkAll(din=comb,dout=permlink);
-data NasHalts;
+data combHalts;
 set permlink;
 if permno;
 run;
@@ -48,7 +48,7 @@ run;
 proc sql;
 create table joincrsp as
 select a.*,b.permno as cpermno
-from NasHalts as a
+from combHalts as a
 left join static.crsphalt as b
 on a.date=b.date and a.permno=b.permno
 order by date, permno
@@ -68,7 +68,7 @@ proc sql;
 create table joinexc as
 select a.*,b.permno as epermno
 from crsphalt as a
-left join NasHalts as b
+left join combHalts as b
 on a.date=b.date and a.permno=b.permno
 order by date, permno
 ;quit;
@@ -132,3 +132,4 @@ proc download data=around out=local.around;run;
 endrsubmit;
 proc sort data=local.around out=around; by permno dat;run;
 PROC PRINT DATA=around(obs=100 keep=permno co: trigger_time dat bidlo prc halt effect ldate prev lag_price dec);RUN;
+%histo(din=around, var=dec);
