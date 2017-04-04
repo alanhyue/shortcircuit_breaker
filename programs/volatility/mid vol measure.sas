@@ -13,7 +13,7 @@ var intraday_decline;
 ranks intraday_decline_rank;
 run;
 
-%let threshold=-0.075;
+%let threshold=-0.050;
 * percentile portfolios;
 data _mark;
 set dsf;
@@ -46,8 +46,8 @@ order by date
 /*proc sort data=_mark; by rank;run;*/
 proc reg data=_mark outest=_est tableout;
 /*by rank;*/
-/*model EWavg=DSSCB;*/
-model VWavg=DSSCB;
+model EWavg=DSSCB;
+/*model VWavg=DSSCB;*/
 run;
 
 * organize result;
