@@ -38,6 +38,17 @@ if (evt ne . and evt=lgevt) or (evt ne . and lgevt=.) then count=date-evt;
 drop __default_count __neginf lgevt;
 run;
 
+*estimate AR;
+%let estLength=250;
+proc sql;
+create table prepare as
+select  a.permno, a.date as evt, b.*
+from static.crsphalt(where=(halt=1)) as a
+left join dsf as b
+on a.permno = b.permno
+where intnx('day',a.date,&winBeg-&estLength) <= b.date <= intnx('day',a.date, &winBeg)
+order by permno, evt, date
+;quit;
 * calculate AR;
 data dsfAr;
 set evtdays;
