@@ -13,28 +13,30 @@ var intraday_decline;
 ranks intraday_decline_rank;
 run;
 
+%let threshold=-0.075;
 * percentile portfolios;
 data _mark;
 set dsf;
-if intraday_decline <=-0.10 then p100=1;
-if intraday_decline <=-0.075 then p075=1;
-if intraday_decline <=-0.050 then p050=1;
+if intraday_decline and intraday_decline <= &threshold then mark=1;
+if mark;
 run;
 * generate EW/VW weights;
 proc sql;
 create table _weight as
 select *, 1/count(*) as EW, mktValue/sum(mktValue) as VW
-from _mark(where=(p100=1))
-group by date, p100
+from _mark
+group by date
+order by date, permno
 ;quit;
 
 * get portfolio average EW/VW;
 proc sql;
 create table _average as
-select date, p100, avg(EW*intraday_decline) as EWavg, 
-	avg(VW*intraday_decline) as VWavg
+select date, sum(EW*intraday_decline) as EWavg, 
+	sum(VW*intraday_decline) as VWavg
 from _weight
-group by date, p100
+group by date
+order by date
 ;quit;
 
 * append SCB dummy;
@@ -44,8 +46,8 @@ group by date, p100
 /*proc sort data=_mark; by rank;run;*/
 proc reg data=_mark outest=_est tableout;
 /*by rank;*/
-model EWavg=DSSCB;
-/*model VWavg=DSSCB;*/
+/*model EWavg=DSSCB;*/
+model VWavg=DSSCB;
 run;
 
 * organize result;
