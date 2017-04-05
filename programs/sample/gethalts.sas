@@ -10,6 +10,8 @@ data crsp;
 set crsp;
 if PRC;
 if RET;
+if BIDLO;
+if BIDLO<0 then delete; *The field is set to zero if it is calculated by the bid price;
 if BIDLO=0 then delete; *The field is set to zero if no Bid or Low Price is available;
 by permno;
 if PRC<0 then PRC=-PRC;
