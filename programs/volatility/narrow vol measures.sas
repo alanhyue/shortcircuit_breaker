@@ -1,12 +1,22 @@
 %include "dsfcalculation.sas";
 
-* OLS regression;
+/*OLS regression*/
+proc reg data=dsf;
+model intraday_decline=DSSCB HALT_DUM SCB_HALT /vif covb;
+run;
+
 proc reg data=dsf;
 model intraday_decline=DSSCB LGDCL_DUM SCB_LGDCL /vif covb;
 run;
 
 * Firm- fixed effect;
 * Ref: https://pdfs.semanticscholar.org/84f5/55569662b8c4882b213cd13f75622eaf495e.pdf;
+proc glm data=dsf;
+ absorb permco; *fixed effects;
+ model intraday_decline = DSSCB HALT_DUM SCB_HALT/ solution;
+run;
+quit;
+
 proc glm data=dsf;
  absorb permco; *fixed effects;
  model intraday_decline = DSSCB LGDCL_DUM SCB_LGDCL/ solution;

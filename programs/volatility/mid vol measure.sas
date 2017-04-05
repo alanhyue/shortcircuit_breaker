@@ -13,7 +13,7 @@ var intraday_decline;
 ranks intraday_decline_rank;
 run;
 
-%let threshold=-0.050;
+%let threshold=-0.10;
 * percentile portfolios;
 data _mark;
 set dsf;

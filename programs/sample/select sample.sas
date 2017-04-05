@@ -57,6 +57,8 @@ if not ret then delete; * delete obs. with missing return;
 if not bidlo then delete; * delete obs. with missing daily low price;
 if prc=0 then delete; * by crsp: a zero price means nor the closing price or the bid/ask average is available;
 if prc<0 then delete; * by crsp: a bid/ask average price is marked by a negative sign;
+if bidlo=0 then delete; * a zero means nor low price or last bid is available;
+if bidlo<0 then delete; * negative price means it is a last bid price;
 run;
 
 proc download data=dsf2 out=my._crspdsf;run;
@@ -78,4 +80,7 @@ inner join (
 	) as b
 on a.permno=b.permno
 ;quit;
+
+* report descriptive statistics;
+proc means data=my.dsf; run;
 
