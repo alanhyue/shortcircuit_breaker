@@ -28,6 +28,7 @@ rsubmit;
 data stocks;
 set crspa.dsfhdr;
 if hshrcd=10 or hshrcd=11; * keep domestic stocks, share code 10 or 11;
+if HEXCD=1 or HEXCD=3; * keep NYSE(1) and Nasdaq(3) stocks;
 if not hsiccd 
 	or (6000<=hsiccd and hsiccd<=6999)
 	or (4800<=hsiccd and hsiccd<=4999) then delete; * less financials and utilities;
@@ -57,29 +58,12 @@ if not ret then delete; * delete obs. with missing return;
 if not bidlo then delete; * delete obs. with missing daily low price;
 if prc=0 then delete; * by crsp: a zero price means nor the closing price or the bid/ask average is available;
 if prc<0 then delete; * by crsp: a bid/ask average price is marked by a negative sign;
-if bidlo=0 then delete; * a zero means nor low price or last bid is available;
+if bidlo=0 then delete; * a zero means neither low price nor last bid is available;
 if bidlo<0 then delete; * negative price means it is a last bid price;
 run;
 
-proc download data=dsf2 out=my._crspdsf;run;
+proc download data=dsf2 out=my.dsf;run;
 endrsubmit;
-
-/*Step 4. Select stocks that are actively traded throught our sample period.*/
-* There are 503 business days between 10Nov2009 and 10Nov2011, inclusive.;
-* Select only stocks with more than 500 daily observations and save it to 
-local drive;
-proc sql;
-create table my.dsf as
-select a.*
-from my._crspdsf as a
-inner join (
-	select permno
-	from my._crspdsf
-	group by permno
-	having count(*)>=500
-	) as b
-on a.permno=b.permno
-;quit;
 
 * report descriptive statistics;
 proc means data=my.dsf; run;
