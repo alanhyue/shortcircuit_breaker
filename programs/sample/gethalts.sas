@@ -5,7 +5,7 @@ signon username=_prompt_;
 libname local 'C:\Users\yu_heng\Downloads\';
 
 rsubmit;
-proc sort data=crspa.dsf(where=(date>="10Nov2010"d)) out=crsp; by permno date;run;
+proc sort data=crspa.dsf(where=(date>="10Nov2009"d)) out=crsp; by permno date;run;
 data crsp;
 set crsp;
 if HEXCD=1 or HEXCD=2 or HEXCD=3;*NYSE, AMEX, or Nasdaq;
