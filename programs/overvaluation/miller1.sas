@@ -15,19 +15,19 @@ on a.date = b.date
 ;quit;
 
 * mark the event windows;
-%let estBeg=-280;
-%let estEnd=-50;
+%let estBeg=-250;
+%let estEnd=-1;
 %let minEstDays=150;
-%let evtBeg=-30;
+%let evtBeg=0;
 %let evtEnd=60;
 
 * select post-breaker halts;
-%AppendSSCBDummy(din=static.crsphalt,dout=halts);
+%AppendSSCBDummy(din=static.crsphalt,dout=haltsdum);
 data halts;
-set halts;
+set haltsdum;
 if dsscb=1;
 if halt=1;
-if date <= "10Nov2011"d;
+if "10Nov2010"d <= date <= "10Nov2011"d;
 run;
 * construct estimation windows;
 proc sql;
