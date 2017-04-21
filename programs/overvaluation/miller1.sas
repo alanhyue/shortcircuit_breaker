@@ -4,7 +4,7 @@ Create: 2017-04-03 18:49:28
 Desc  : Miller's (1977) overvaluation test, using FF5 as the equilibrium model.
 Test whether the average AR(t) is sig. diff. from 0.
 */
-
+%include "sampleHalts.sas";
 * append FF5;
 proc sql;
 create table dsff as
@@ -15,20 +15,28 @@ on a.date = b.date
 ;quit;
 
 * mark the event windows;
-%let estBeg=-250;
-%let estEnd=-1;
+%let estBeg=-260;
+%let estEnd=-11;
 %let minEstDays=150;
-%let evtBeg=0;
+%let evtBeg=-10;
 %let evtEnd=60;
 
 * select post-breaker halts;
-%AppendSSCBDummy(din=static.crsphalt,dout=haltsdum);
+%AppendSSCBDummy(din=haltrecords,dout=haltsdum);
 data halts;
 set haltsdum;
-if dsscb=1;
-if halt=1;
-if "10Nov2010"d <= date <= "10Nov2011"d;
+if dsscb=1 and halt=1 and "10Nov2010"d <= date <= "10Nov2011"d;
 run;
+
+* keep events that with the last day price >$10;
+/*
+%let minPRC=10;
+data halts;
+set halts;
+if lag_price>=&minPRC;
+run;
+*/
+
 * construct estimation windows;
 proc sql;
 create table markevents as

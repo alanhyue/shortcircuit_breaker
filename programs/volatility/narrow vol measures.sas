@@ -6,7 +6,7 @@ model intraday_decline=DSSCB HALT_DUM SCB_HALT /vif covb;
 run;
 
 proc reg data=dsf;
-model intraday_decline=DSSCB LGDCL_DUM SCB_LGDCL /vif covb;
+model intraday_decline=DSSCB EFFECT_DUM SCB_LGDCL /vif covb;
 run;
 
 * Firm- fixed effect;
@@ -19,7 +19,7 @@ quit;
 
 proc glm data=dsf;
  absorb permco; *fixed effects;
- model intraday_decline = DSSCB LGDCL_DUM SCB_LGDCL/ solution;
+ model intraday_decline = DSSCB EFFECT_DUM SCB_LGDCL/ solution;
 run;
 quit;
 

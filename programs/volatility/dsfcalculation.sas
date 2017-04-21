@@ -7,8 +7,9 @@ Desc  : perform calculations for daily stock file.
 data dsf;
 set dsf;
 by permno;
-lag_price=lag(PRC);
 /*lag_price=PRC/(RET+1); * derive the closing price in the previous trading day;*/
+lag_price=lag(PRC);
+if lag_price=. then delete;
 
 P_var=(LOG(ASKHI/BIDLO))**2/(4*LOG(2)); * 1-day Parkinson variance;
 P_vol=SQRT(P_var);
@@ -37,14 +38,14 @@ if t>0 then semiup=t**2;
 if t<0 then semidown=t**2;
 intraday_decline=(BIDLO-lag_price)/lag_price;
 intraday_raise=(ASKHI-lag_price)/lag_price;
-LGDCL_DUM=0; *initialize large intraday decline dummy;
+EFFECT_DUM=0; *initialize large intraday decline dummy;
 HALT_DUM=0; *initialize short halt dummy;
 if intraday_decline ne . and intraday_decline<=-0.10 then do;
-	LGDCL_DUM=1; *mark the day large decline occurs;
+	EFFECT_DUM=1; *mark the day large decline occurs;
 	HALT_DUM=1; *mark short halt;
 	end;
-if LAG(LGDCL_DUM)=1 and date-1=lag(date) then LGDCL_DUM=1; *mark the following trading day.;
-SCB_LGDCL=DSSCB*LGDCL_DUM; * large decline dummy in post-breaker period;
+if LAG(EFFECT_DUM)=1 and date-1=lag(date) then EFFECT_DUM=1; *mark the following trading day.;
+SCB_LGDCL=DSSCB*EFFECT_DUM; * large decline dummy in post-breaker period;
 SCB_HALT=DSSCB*HALT_DUM; * halt dummy in the post-breaker period;
 mktValue=SHROUT*1000*PRC;
 run;

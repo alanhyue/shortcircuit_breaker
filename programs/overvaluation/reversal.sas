@@ -6,7 +6,7 @@ Desc  : Return reversal test.
 
 * Parameter Settings;
 %let CARfollow_beg=2;
-%let CARfollow_end=5;
+%let CARfollow_end=12;
 
 /*Step 1. Calculate event CAR*/
 data evtar;
