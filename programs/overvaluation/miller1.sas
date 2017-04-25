@@ -29,13 +29,13 @@ if dsscb=1 and halt=1 and "10Nov2010"d <= date <= "10Nov2011"d;
 run;
 
 * keep events that with the last day price >$10;
-/*
+
 %let minPRC=10;
 data halts;
 set halts;
 if lag_price>=&minPRC;
 run;
-*/
+
 
 * construct estimation windows;
 proc sql;
@@ -139,3 +139,20 @@ series x=day y=AAR;
 series x=day y=CAAR;
 REFLINE 0;
 run;
+
+
+* CAR calculation;
+%let t1=2;
+%let t2=60;
+data selAR;
+set culreturns;
+if &t1<=datedif<=&t2;
+run;
+proc sql;
+create table selCAR as 
+select permno, evt, sum(AR) as CAR_&t1._&t2
+from selAR
+group by permno, evt
+;quit;
+proc means data=selCAR mean median n t PRT std;
+var CAR_&t1._&t2; run;

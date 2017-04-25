@@ -45,6 +45,8 @@ left join ( select permno, evt, turnover
 on a.permno=b.permno and a.evt=b.evt
 ;quit;
 
+* summary statistics of divergence measures;
+proc means data=diver N MEAN MEDIAN STD MIN MAX T; var stdret stdar turnover;run;
 * Parameter Settings;
 %let CARfollow_beg=1;
 %let CARfollow_end=1;

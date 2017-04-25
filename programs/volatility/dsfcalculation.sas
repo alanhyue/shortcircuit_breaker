@@ -8,7 +8,7 @@ data dsf;
 set dsf;
 by permno;
 /*lag_price=PRC/(RET+1); * derive the closing price in the previous trading day;*/
-lag_price=lag(PRC);
+lag_price=ifn(not(first.permno),lag(PRC),.);
 if lag_price=. then delete;
 
 P_var=(LOG(ASKHI/BIDLO))**2/(4*LOG(2)); * 1-day Parkinson variance;
@@ -44,7 +44,9 @@ if intraday_decline ne . and intraday_decline<=-0.10 then do;
 	EFFECT_DUM=1; *mark the day large decline occurs;
 	HALT_DUM=1; *mark short halt;
 	end;
-if LAG(EFFECT_DUM)=1 and date-1=lag(date) then EFFECT_DUM=1; *mark the following trading day.;
+leffect=ifn(not(first.permno),lag(EFFECT_DUM),.);
+ldate=ifn(not(first.permno),lag(date),.);
+if leffect=1 and date-1=ldate then EFFECT_DUM=1; *mark the following trading day.;
 SCB_LGDCL=DSSCB*EFFECT_DUM; * large decline dummy in post-breaker period;
 SCB_HALT=DSSCB*HALT_DUM; * halt dummy in the post-breaker period;
 mktValue=SHROUT*1000*PRC;

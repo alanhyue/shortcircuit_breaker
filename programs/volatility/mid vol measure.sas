@@ -76,8 +76,8 @@ group by date, intraday_decline_rank
 proc sort data=_mark; by rank;run;
 proc reg data=_mark outest=_est tableout noprint;
 by rank;
-model EWavg=DSSCB;
-/*model VWavg=DSSCB;*/
+/*model EWavg=DSSCB;*/
+model VWavg=DSSCB;
 run;
 
 * organize result;
