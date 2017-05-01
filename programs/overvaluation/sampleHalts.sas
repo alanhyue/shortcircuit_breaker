@@ -26,23 +26,15 @@ by permno;
 halt=0;
 leftover=0;
 affect=0;
-cal_refresh=0;
-trd_refresh=0;
+refresh=0;
 
-ldate=ifn(not(first.permno),lag(date),.);
-prev=date-1;
-format ldate date9.;
-format prev date9.;
 lag_price=ifn(not(first.permno),lag(PRC),.);
-/*if permno=lpermno then lag_price=lag(PRC);*/
-/*	else lag_price=.;*/
 dec=(BIDLO-lag_price)/lag_price;
 if dec ne . and dec<= -0.10 then halt=1;
 lhalt=ifn(not(first.permno),lag(halt),.);
-if prev=ldate and lhalt=1 then leftover=1;
+if lhalt=1 then leftover=1;
 if halt=1 or leftover=1 then affect=1;
-if halt=1 and leftover=1 then cal_refresh=1;
-if halt=1 and lhalt=1 then trd_refresh=1;
+if halt=1 and leftover=1 then refresh=1; 
 run;
 
 * form halt records;
@@ -59,8 +51,7 @@ create table haltstat as
 select date, 
 	sum(affect) as affected,
 	sum(halt) as halts, 
-	sum(cal_refresh) as cal_refreshs,
-	sum(trd_refresh) as trd_refreshs,
+	sum(refresh) as refreshs,
 	count(PRC) as stocks,
 	sum(affect)/count(PRC)*100 as pct
 from calc

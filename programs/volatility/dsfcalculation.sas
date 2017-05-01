@@ -1,3 +1,4 @@
+libname static "F:\SCB\data" access=readonly;
 /* 
 Author: Heng Yue 
 Create: 2017-03-27 10:36:59
@@ -38,15 +39,18 @@ if t>0 then semiup=t**2;
 if t<0 then semidown=t**2;
 intraday_decline=(BIDLO-lag_price)/lag_price;
 intraday_raise=(ASKHI-lag_price)/lag_price;
+
 EFFECT_DUM=0; *initialize large intraday decline dummy;
 HALT_DUM=0; *initialize short halt dummy;
 if intraday_decline ne . and intraday_decline<=-0.10 then do;
 	EFFECT_DUM=1; *mark the day large decline occurs;
 	HALT_DUM=1; *mark short halt;
 	end;
-leffect=ifn(not(first.permno),lag(EFFECT_DUM),.);
-ldate=ifn(not(first.permno),lag(date),.);
-if leffect=1 and date-1=ldate then EFFECT_DUM=1; *mark the following trading day.;
+lhalt=ifn(not(first.permno),lag(HALT_DUM),.);
+if lhalt=1 then leftover=1;
+if HALT_DUM=1 or leftover=1 then EFFECT_DUM=1;
+if HALT_DUM=1 and leftover=1 then refresh=1; 
+
 SCB_LGDCL=DSSCB*EFFECT_DUM; * large decline dummy in post-breaker period;
 SCB_HALT=DSSCB*HALT_DUM; * halt dummy in the post-breaker period;
 mktValue=SHROUT*1000*PRC;
