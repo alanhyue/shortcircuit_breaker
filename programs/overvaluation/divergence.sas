@@ -105,8 +105,8 @@ order by a.permno, a.evt
 * summary statistics of divergence measures;
 proc means data=diver N MEAN MEDIAN STD MIN MAX T; var stdret stdar turnover analdis1 analdis2;run;
 * Parameter Settings;
-%let CARfollow_beg=0;
-%let CARfollow_end=0;
+%let CARfollow_beg=1;
+%let CARfollow_end=1;
 
 /* calculate following day return*/
 data folar;

@@ -75,7 +75,7 @@ on a.permno=b.permno and a.evt=b.evt
 
 * estimate betas;
 proc reg outest=est data=estWindow;
-ID permno evt;
+/*ID permno evt;*/
 by permno evt;
 model rirf=mktrf SMB HML UMD / noprint;
 run;
