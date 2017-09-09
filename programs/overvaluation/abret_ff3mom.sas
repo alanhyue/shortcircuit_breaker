@@ -1,39 +1,42 @@
 /* 
 Author: Heng Yue 
 Create: 2017-04-03 18:49:28
-Desc  : Miller's (1977) overvaluation test, using FF5 as the equilibrium model.
+Desc  : Miller's (1977) overvaluation test, using FF3 as the equilibrium model.
 Test whether the average AR(t) is sig. diff. from 0.
 */
 %include "sampleHalts.sas";
-* append FF5;
+
+* append FF4;
 proc sql;
 create table dsff as
 select a.*,b.*, a.ret-b.rf as rirf
 from static.dsf as a
-left join ff.factors_daily as b
+left join ff.ff4 as b
 on a.date = b.date
 ;quit;
 
 * mark the event windows;
-%let estBeg=-260;
-%let estEnd=-11;
+%let estBeg=-280;
+%let estEnd=-31;
 %let minEstDays=150;
-%let evtBeg=-10;
+%let evtBeg=-30;
 %let evtEnd=60;
 
 * select post-breaker halts;
 %AppendSSCBDummy(din=haltrecords,dout=haltsdum);
 data halts;
 set haltsdum;
-if dsscb=1 and halt=1 and "10Nov2010"d <= date <= "10Nov2011"d;
+/*if EXTCOMPLIANCE_DUM=1 and halt=1 and "28Feb2011"d <= date <= "28Feb2012"d; *Select only halts in the post-breaker period;*/
+/*if EXTCOMPLIANCE_DUM=0 and halt=1 and "01May2009"d <= date < "28Feb2011"d ; *Select only halts in the pre-breaker period;*/
+if EXTCOMPLIANCE_DUM=1 and halt=1; * Select halts in the whole sample;
 run;
 
 * keep events that with the last day price >$10;
-
 %let minPRC=10;
+%let maxPRC=99999;
 data halts;
 set halts;
-if lag_price>=&minPRC;
+if &maxPRC>=lag_price>=&minPRC;
 run;
 
 
@@ -57,7 +60,7 @@ order by permno, evt, date
 * filter estimation windows that do not meet minimum requirement;
 proc sql;
 create table wantevt as
-select permno, evt, count(*) as nobs
+select permno, cusip, evt, count(*) as nobs
 from markevents
 group by permno, evt
 having count(*)>=&minEstDays
@@ -74,15 +77,15 @@ on a.permno=b.permno and a.evt=b.evt
 proc reg outest=est data=estWindow;
 ID permno evt;
 by permno evt;
-model rirf=mktrf SMB HML RMW CMA / noprint;
+model rirf=mktrf SMB HML UMD / noprint;
 run;
 
 * estimate expected returns & ARs;
 proc sql;
 create table returns as
 select a.*, 
-	b.Intercept+a.mktrf*b.mktrf+a.SMB*b.SMB+a.HML*b.HML+a.RMW*b.RMW+a.CMA*b.CMA as Eret,
-	a.rirf-(b.Intercept+a.mktrf*b.mktrf+a.SMB*b.SMB+a.HML*b.HML+a.RMW*b.RMW+a.CMA*b.CMA) as AR
+	b.Intercept+a.mktrf*b.mktrf+a.SMB*b.SMB+a.HML*b.HML+a.UMD*b.UMD as Eret,
+	a.rirf-(b.Intercept+a.mktrf*b.mktrf+a.SMB*b.SMB+a.HML*b.HML+a.UMD*b.UMD) as AR
 from evtwindow as a, est as b
 where a.permno = b.permno and a.evt = b.evt
 ;quit;
@@ -142,7 +145,8 @@ run;
 
 
 * CAR calculation;
-%let t1=2;
+ods excel file='C:\Users\yu_heng\Downloads\abret_ff3mom_result.xlsx';
+%let t1=1;
 %let t2=60;
 data selAR;
 set culreturns;
@@ -156,3 +160,4 @@ group by permno, evt
 ;quit;
 proc means data=selCAR mean median n t PRT std;
 var CAR_&t1._&t2; run;
+ods excel close;

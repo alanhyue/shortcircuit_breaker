@@ -1,0 +1,23 @@
+* export my data for evetus;
+data a;
+set halts (keep=permno date);
+format date yymmdd10.;
+run;
+PROC PRINT DATA=a(OBS=10);RUN;
+proc export data=a outfile="C:\Users\heng\Downloads\company.txt" dbms=tab replace;run;
+
+* import eventus result for plotting;
+proc import out=wrds datafile="C:\Users\heng\Downloads\wrdsresult.txt" dbms=tab replace;
+getnames=yes;
+delimeter=' ';
+run;
+PROC PRINT DATA=wrds;RUN;
+data car;
+set wrds;
+retain CAAR;
+if _N_=1 then CAAR=0;
+CAAR=return+CAAR;
+run;
+proc sgplot data=car;
+series x=day y=return;
+series x=day y=caar;run;

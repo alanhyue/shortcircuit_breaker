@@ -60,4 +60,8 @@ endrsubmit;
 
 
 * print the means;
-proc means data=my.haltstats MEAN MEDIAN STD P5 P95;run;
+data haltselect;
+set my.haltstats;
+if "01May2009"d<=date<="28Feb2012"d;
+run;
+proc means data=haltselect MEAN MEDIAN STD P5 P95;run;

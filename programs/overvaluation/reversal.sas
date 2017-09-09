@@ -6,7 +6,7 @@ Desc  : Return reversal test.
 
 * Parameter Settings;
 %let CARfollow_beg=2;
-%let CARfollow_end=12;
+%let CARfollow_end=5;
 
 /*Step 1. Calculate event CAR*/
 data evtar;
@@ -55,5 +55,5 @@ left join cap as c
 
 /*Step 4. Reg*/
 proc reg data=mged;
-model fol = car;
+model fol = car MKTCAP;
 run;

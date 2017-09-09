@@ -1,5 +1,6 @@
 libname static "E:\SCB\data" access=readonly;
 libname ff "E:\SCB\data\ff" access=readonly;
+libname ibes "E:\SCB\data\ibes" access=readonly;
 libname my "C:\Users\yu_heng\Downloads\";
 libname taqref 'E:\SCB\TAQ\data\sasdata';
 
@@ -51,6 +52,13 @@ histogram &var;
 run;
 %MEND histo;
 
+%MACRO freq(din=,var=);
+proc freq data=&din;
+   tables &var / plots=freqplot;
+run;
+%MEND freq;
+
+
 %MACRO Rank(din=,dout=,var=,n=10);
 proc rank data=&din out=&dout group=&n ties=low;
 var &var;
@@ -61,8 +69,14 @@ run;
 %MACRO AppendSSCBDummy(din=,dout=);
 data &dout;
 set &din;
-if date<="10Nov2010"d then dsscb=0;
-else dsscb=1;
+if date<="24Feb2010"d then APPROVAL_DUM=0;
+	else APPROVAL_DUM=1;
+if date<="10May2010"d then EFFECTIVE_DUM=0;
+	else EFFECTIVE_DUM=1;
+if date<="10Nov2010"d then COMPLIANCE_DUM=0;
+	else COMPLIANCE_DUM=1;
+if date<="28Feb2011"d then EXTCOMPLIANCE_DUM=0;
+	else EXTCOMPLIANCE_DUM=1;
 run;quit;
 %MEND AppendSSCBDummy;
 

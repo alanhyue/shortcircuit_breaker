@@ -1,4 +1,3 @@
-libname static "F:\SCB\data" access=readonly;
 /* 
 Author: Heng Yue 
 Create: 2017-03-27 10:36:59
@@ -6,9 +5,8 @@ Desc  : perform calculations for daily stock file.
 */
 %AppendSSCBDummy(din=static.dsf,dout=dsf);
 data dsf;
-set dsf;
+set dsf (where=("01May2009"d<=date<="28Feb2012"d));
 by permno;
-/*lag_price=PRC/(RET+1); * derive the closing price in the previous trading day;*/
 lag_price=ifn(not(first.permno),lag(PRC),.);
 if lag_price=. then delete;
 
@@ -51,7 +49,9 @@ if lhalt=1 then leftover=1;
 if HALT_DUM=1 or leftover=1 then EFFECT_DUM=1;
 if HALT_DUM=1 and leftover=1 then refresh=1; 
 
-SCB_LGDCL=DSSCB*EFFECT_DUM; * large decline dummy in post-breaker period;
-SCB_HALT=DSSCB*HALT_DUM; * halt dummy in the post-breaker period;
+SCB_LGDCL=EXTCOMPLIANCE_DUM*EFFECT_DUM; * large decline dummy in post-breaker period;
+SCB_HALT=EXTCOMPLIANCE_DUM*HALT_DUM; * halt dummy in the post-breaker period;
 mktValue=SHROUT*1000*PRC;
+turnover=VOL/SHROUT;
+rebounce=(PRC-BIDLO)/lag_price;
 run;

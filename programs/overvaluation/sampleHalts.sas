@@ -7,7 +7,7 @@ Output:
 	haltstat - Aggregated daily short halt statistics.
 */
 
-proc sort data=static.dsf(where=(date>="10Nov2009"d)) out=dsf; by permno date;run;
+proc sort data=static.dsf(where=(date>="01May2009"d)) out=dsf; by permno date;run;
 data fileter;
 set dsf;
 if HEXCD=1 or HEXCD=2 or HEXCD=3;*NYSE, AMEX, or Nasdaq;
@@ -60,9 +60,6 @@ order by date
 ;quit;
 
 proc means data=haltstat MEAN MEDIAN STD P5 P95;run;
-
-* find days with most halts;
-PROC PRINT DATA=calc(obs=30 where=(date="31Dec2010"d));RUN;
 
 * a plot of halts against dates;
 proc sgplot data=haltstat;

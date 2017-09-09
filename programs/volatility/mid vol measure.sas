@@ -46,8 +46,8 @@ order by date
 * reg by rank;
 /*proc sort data=_mark; by rank;run;*/
 proc reg data=_mark outest=_est tableout;
-model EWavg=DSSCB;
-model VWavg=DSSCB;
+model EWavg=EXTCOMPLIANCE_DUM;
+model VWavg=EXTCOMPLIANCE_DUM;
 run;
 /*End Test Percentile Portfolios*/
 
@@ -76,8 +76,8 @@ group by date, intraday_decline_rank
 proc sort data=_mark; by rank;run;
 proc reg data=_mark outest=_est tableout noprint;
 by rank;
-/*model EWavg=DSSCB;*/
-model VWavg=DSSCB;
+model EWavg=EXTCOMPLIANCE_DUM;
+/*model VWavg=EXTCOMPLIANCE_DUM;*/
 run;
 
 * organize result;
@@ -87,7 +87,7 @@ if _type_="L95B" then delete;
 if _type_="U95B" then delete;
 if _type_="PARMS" then do;
 	pre=intercept;
-	post=intercept+dsscb;
+	post=intercept+EXTCOMPLIANCE_DUM;
 	end;
 drop intercept EWavg VWavg _MODEL_ _RMSE_;
 run;

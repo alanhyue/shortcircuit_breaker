@@ -46,7 +46,7 @@ create table dsf as
 select a.*
 from crspa.dsf as a
 inner join stocks as b
-on a.permno=b.permno and '10Nov2009'd<=a.date<='10Nov2011'd
+on a.permno=b.permno and '01Jan2009'd<=a.date<='31Dec2014'd
 ;quit;
 
 /*Step 3. Clease our firm-day sample.*/

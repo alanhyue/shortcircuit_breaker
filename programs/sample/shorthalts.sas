@@ -12,7 +12,7 @@ table OUT:
 
 /*Step 1. Import and clean*/
 * import original short halts file;
-proc import datafile="E:\SCB\data\shohalts.csv" out=halts_original dbms=CSV;
+proc import datafile="F:\SCB\data\shohalts_nasdaq.txt" out=halts_original dbms=CSV;
 getnames=yes;
 run;
 
@@ -33,6 +33,7 @@ run;
 quit;
 
 * Get a feel of the table.;
+%histo(din=halts,var=trigger_time);
 %histo(din=halts,var=date); * a "U" shape. The number of halts in a day declines until 2014 then rises.;
 %histo(din=halts,var=time); * nearly 25% halts happen at 9:30am, when the market opens. There's also a drawf "U" shape from 9:30am to 4:00pm;
 %histo(din=halts,var=year);

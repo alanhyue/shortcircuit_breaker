@@ -1,5 +1,6 @@
+
 * read Nasdaq halts data;
-proc import datafile="F:\SCB\data\shohalts_nasdaq.txt" out=nasraw replace;
+proc import datafile="E:\SCB\data\shohalts_nasdaq.txt" out=nasraw replace;
 getnames=yes;
 delimiter=',';
 run;
@@ -16,7 +17,7 @@ if "09:30:00"t<=time<="16:00:00"t; * less halts outside normal trading hours;
 drop Market_Category Trigger_Time time;
 run;
 * read NYSE halts data;
-proc import datafile="F:\SCB\data\shohalts_nyse.csv" out=nyseraw replace;
+proc import datafile="E:\SCB\data\shohalts_nyse.csv" out=nyseraw replace;
 getnames=yes;
 delimiter=',';
 run;
@@ -34,11 +35,31 @@ run;
 data comb;
 set nysehalts nashalts;
 run;
+
+* report total number of halts;
+proc sql;
+select count(*) as tot_halts
+from comb
+;quit;
+
 * remove duplicated observations;
 proc sort data=comb out=sorted dupout=dups nodupkey;by ticker date;run;
 
+* report number of duplicates;
+proc sql;
+select count(*) as duplicates
+from dups
+;quit;
+
 * match PERMNO from crsp;
-%TickerLinkAll(din=comb,dout=permlink);
+%TickerLinkAll(din=test,dout=permlink);
+
+* report number of CRSP matches;
+proc sql;
+select count(*) as tot, count(permno) as matched,  count(permno)/count(*) as pct
+from permlink
+;quit;
+
 data combHalts;
 set permlink;
 if permno;
@@ -53,11 +74,12 @@ on a.date=b.date and a.permno=b.permno
 order by date, permno
 ;quit;
 
-* match ratio in exchange records;
+* report PERMNO matches;
 proc sql;
 select count(*) as tot, count(cpermno) as match, count(cpermno)/count(*) as pct
 from joincrsp
 ;quit;
+
 * match ratio in CRSP records;
 data crsphalt;
 set static.crsphalt;
